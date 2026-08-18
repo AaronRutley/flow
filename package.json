@@ -23,7 +23,7 @@
     "start": "electron .",
     "predev": "node scripts/check-install.js",
     "dev": "electron . --dev",
-    "build": "electron-builder --mac",
+    "build": "electron-builder --mac --publish never",
     "dist": "electron-builder --mac",
     "sign": "codesign --force --deep --sign 'flow code signing' dist/mac-arm64/Flow.app",
     "release": "npm run build && npm run sign && rm -rf /Applications/Flow.app && cp -R dist/mac-arm64/Flow.app /Applications/Flow.app && echo 'Flow.app updated in /Applications'",
