@@ -1,0 +1,7 @@
+#!/bin/sh
+# Pre-commit gate (0335): lint errors and failing smoke tests do not land.
+# Wired by postinstall (git config core.hooksPath .githooks); skip once with
+# `git commit --no-verify` when you must.
+set -e
+npm run -s lint
+npm test

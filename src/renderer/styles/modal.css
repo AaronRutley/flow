@@ -1,0 +1,662 @@
+/* ── The one confirmation (0187) ──
+   Small, centered, above everything: one sentence, Cancel, and the act by
+   name. The same panel wherever a destructive act asks. */
+#confirm-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(20, 20, 18, 0.45);
+}
+
+#confirm-panel {
+  width: min(380px, 100%);
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--page);
+  box-shadow: 0 24px 64px rgba(20, 20, 18, 0.28);
+}
+
+#confirm-message {
+  margin: 0 0 16px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+#confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ── Card modal ──
+   A document over the board: same renderer as the session view, none of the
+   session chrome. */
+/* The open card fills the content area under the bars (0188): no backdrop,
+   no blur, the nav above stays live. The panel reads as board furniture —
+   the same well-and-hairline language as a column, not a floating dialog. */
+#card-view {
+  position: fixed;
+  top: calc(var(--titlebar-height) + var(--project-bar-height) + var(--toolbar-height));
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* Under the bars (40+) so their dropdown menus still open over the room. */
+  z-index: 39;
+  display: flex;
+  justify-content: center;
+  /* The rounded room returns (0403, walking back 0374's full screen):
+     the open card is board furniture again, framed by the page. */
+  padding: 4px 28px 28px;
+  background: var(--page);
+}
+
+#card-modal-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  max-width: 1500px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  /* Surface, not page (0369): the session view's doc pane sits on
+     --surface, and the open card is the same document — the two rooms
+     should read as one. In dark themes this also lifts the text column
+     off the page, marking it as the user's doc. */
+  background: var(--surface);
+  overflow: hidden;
+}
+
+#card-modal-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* ── The modal's document as tabs (0178, renavigated 0425) ──
+   The main nav's manners: the tabs are quiet pills and one sliding bubble
+   carries hover and rest, painted by docs.js the way views.js paints the
+   toolbar's. A checklist tab carries its done-count as a small meta. */
+.card-tabs {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.card-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.card-tab:hover,
+.card-tab.active {
+  color: var(--text);
+}
+
+.card-tab-bubble {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.35);
+  backdrop-filter: blur(14px) saturate(1.35);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 220ms cubic-bezier(0.3, 0.9, 0.35, 1),
+    width 220ms cubic-bezier(0.3, 0.9, 0.35, 1),
+    opacity 140ms ease;
+}
+
+.card-tab-bubble.teleport {
+  transition: opacity 140ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-tab-bubble {
+    transition: opacity 140ms ease;
+  }
+}
+
+/* The buttons ride above the bubble. */
+.card-tabs .card-tab {
+  position: relative;
+  z-index: 1;
+}
+
+.card-tab-meta {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.card-tab-meta:empty {
+  display: none;
+}
+
+.card-tab-pane.hidden {
+  display: none;
+}
+
+/* A shaped to-do card opens two-up (0175): the document on the left, a
+   fresh shell on the right. Since 0272 the header crowns both — the row
+   below the header is what splits into columns. */
+#card-modal-row {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+#card-modal-panel.with-terminal #card-modal-row {
+  flex-direction: row;
+}
+
+/* The same surface as every other terminal in the app (0188): the board
+   pane's paper in each theme, a hairline where it meets the document. */
+#card-modal-term {
+  display: flex;
+  flex-direction: column;
+  width: 44%;
+  min-width: 380px;
+  border-left: 1px solid var(--border-strong);
+  background: #f4f4f4;
+}
+
+:root[data-theme='dark'] #card-modal-term {
+  background: #141414;
+}
+
+#card-modal-term-frame {
+  flex: 1;
+  min-height: 0;
+  padding: 10px 4px 4px 12px;
+}
+
+#card-modal-term-frame .term-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
+/* The right-hand pair of ways in (0436), reading as one group. */
+#card-modal-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The modal grows out of whatever opened it: the panel keeps its final place,
+   and only its scale animates, pivoting around the trigger's centre (set as
+   transform-origin in JS). Snappy and native — done in ~230ms. */
+.morph-in {
+  animation: modal-morph-in var(--motion-enter) var(--ease-enter);
+}
+
+@keyframes modal-morph-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Closing plays it backwards: the panel shrinks toward its card and fades. */
+.morph-out {
+  animation: modal-morph-out var(--motion-exit) var(--ease-exit) forwards;
+}
+
+/* The overlay's dim lifts with the panel so the board is not left greyed. */
+#card-view.closing,
+#settings-modal.closing {
+  animation: modal-overlay-out var(--motion-exit) var(--ease-exit) forwards;
+}
+
+@keyframes modal-morph-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+
+@keyframes modal-overlay-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Motion is a garnish, never load-bearing: a viewer who asks for less gets the
+   same states, arrived at instantly. The JS morphs already bail on this query;
+   this covers the CSS-only pane and modal entrances. */
+@media (prefers-reduced-motion: reduce) {
+  #board-term-pane:not(.hidden),
+  #board-term-pane.leaving,
+  #session-view:not(.hidden) #term-pane,
+  .morph-in,
+  .morph-out,
+  #card-view.closing,
+  #settings-modal.closing {
+    animation: none;
+  }
+}
+
+#card-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* The number tucks in right after the title (0272), very quiet. */
+#card-modal-id {
+  flex-shrink: 0;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+#card-modal-id:empty {
+  display: none;
+}
+
+/* The title leads the full-width header (0260, spanning the terminal
+   since 0272); its lead word carries the weight, the rest a step lighter. */
+#card-modal-title {
+  flex: 0 1 auto;
+  font-size: 17px;
+  font-weight: 550;
+  letter-spacing: -0.01em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#card-modal-title b {
+  font-weight: 750;
+}
+
+/* Keeps the receipt snug against the title while the actions hold the far
+   edge of the space-between header. */
+#card-modal-header .save-status {
+  margin-right: auto;
+}
+
+#card-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* The document owns the column's height (0425): the body fills, so the
+   footer below sits pinned to the bottom of the screen rather than
+   floating under however little text the card holds. */
+#card-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 22px;
+  min-height: 220px;
+}
+
+/* The writing area is a room, not a slot (0425): the Task editor opens
+   tall enough to think in, and grows with the text from there. */
+#card-modal-body .doc-context {
+  min-height: 42vh;
+}
+
+/* The same measure as the tab view and Planning (0389): full-bleed room
+   (0374), readable column. */
+#card-modal-body > * {
+  max-width: 76ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Two ways out of a to-do card: save your edits and leave on the left, save
+   and shape on the right. Pinned to the bottom (0425), with the same strip
+   height as the terminal's actions so the two border lines run as one. */
+#card-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 22px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* An empty context says what to do with itself. */
+.doc-context:empty::before,
+.doc-context > p:only-child:empty::before,
+.doc-context > p:only-child:has(> br:only-child)::before {
+  content: 'Write the context here: what, why, links. Shape drafts the rest.';
+  color: var(--text-faint);
+}
+
+/* ── Search ──
+   Summoned with Cmd+K or Cmd+F, so it takes no room on the board itself. */
+#search-overlay {
+  position: fixed;
+  z-index: 80;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  padding-top: 15vh;
+  background: rgba(20, 20, 18, 0.12);
+  height: 100%;
+}
+
+:root[data-theme='dark'] #search-overlay {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+#search-overlay .search-field {
+  width: 520px;
+  height: 52px;
+  border-radius: var(--r-lg);
+  box-shadow: 0 18px 48px rgba(20, 20, 18, 0.22);
+}
+
+#search-overlay #search {
+  font-size: 15px;
+}
+
+.search-hint {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-faint);
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
+
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 14px;
+  width: 300px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.search-field:focus-within {
+  border-color: var(--border-strong);
+}
+
+.search-icon {
+  display: flex;
+  color: var(--text-faint);
+}
+
+#search {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 13.5px;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+#search::placeholder {
+  color: var(--text-faint);
+}
+
+#search::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+#columns {
+  display: grid;
+  /* Columns keep a readable width and the row scrolls sideways rather than
+     crushing three columns into a narrow window. */
+  grid-template-columns: repeat(3, minmax(290px, 1fr));
+  gap: 20px;
+  padding: 4px 28px 28px;
+  min-height: 0;
+  flex: 1;
+  overflow-x: auto;
+  /* A column sliding out to the left fades away instead of shearing off at
+     the scroll boundary. The fade lives inside the 28px padding, so a row
+     scrolled fully left keeps every card at full strength. */
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 26px);
+  mask-image: linear-gradient(to right, transparent 0, black 26px);
+}
+
+.column {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-radius: var(--r-xl);
+  background: var(--well);
+  overflow: hidden;
+}
+
+/* Cards fade out into the well rather than stopping dead at the rounded
+   corner, so a scrolling column reads as having more below. */
+.column::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 40px;
+  background: linear-gradient(to bottom, transparent, var(--well));
+  pointer-events: none;
+}
+
+.column > header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.column-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-md);
+  /* Barely-there (0192): a 4% wash of the ink, so the chip recedes and the
+     icon carries the weight — in both themes, since it mixes from --text. */
+  background: color-mix(in srgb, var(--text) 4%, transparent);
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.column-heading {
+  min-width: 0;
+  flex: 1;
+}
+
+/* Doing is the circle with something in it. */
+.column[data-column='doing'] .column-icon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.column-heading h2 {
+  font-size: 14.5px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.column-heading p {
+  margin-top: 1px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+
+/* The terminal toggle lives in the design bar now (0382); the header keeps
+   only the shelf doors and the sweep. */
+
+/* Done's sweep keeps the same manners (0306): resting invisible beside the
+   count, shown by the header's hover. display:none still wins when the
+   column is empty. The shelf doors (0383) share them. */
+.column > header #archive-done-button,
+.column > header #foot-backlog,
+.column > header #foot-archive {
+  opacity: 0;
+  transition: opacity 120ms ease;
+  margin-right: -6px;
+}
+
+.column > header:hover #archive-done-button,
+.column > header:hover #foot-backlog,
+.column > header:hover #foot-archive {
+  opacity: 1;
+}
+
+/* Open is the accent glyph (0270), not the tool-tab corner dot: that dot
+   lives on ::after, the same pseudo-element the data-tip bubble draws on,
+   and the two rules merged into a smeared blob on hover. */
+#design-bar #global-term-button.open {
+  color: var(--accent);
+}
+
+/* The move-to-project menu hangs under its own button (0312), sized for
+   project names rather than the 420px the switcher menu wants. */
+.card-move-wrap {
+  position: relative;
+}
+
+#card-modal-move-menu {
+  left: auto;
+  right: 0;
+  min-width: 180px;
+  padding: 6px;
+}
+
+.count-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: var(--r-sm);
+  background: var(--surface-sunken);
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+/* Done's chip doubles as the filter: last seven days, or everything. */
+.count-chip.toggle {
+  cursor: pointer;
+}
+
+.count-chip.toggle:hover {
+  color: var(--text);
+  background: var(--border);
+}
+
+.count-chip.toggle.on {
+  background: var(--text);
+  color: var(--page);
+}
+
+.column-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* Extra room at the bottom so the last card clears the fade. */
+  padding: 14px 14px 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* The Add a card door left the column for the design bar (0382); the
+   column body keeps its ordinary padding and the standard bottom fade. */
+
+#card-add-input {
+  margin: 18px 22px;
+  min-height: 240px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 14.5px;
+  line-height: 1.6;
+  resize: none;
+}
+
+#card-add-input:focus {
+  outline: none;
+  border-color: var(--text-faint);
+}
+
+#card-add-input::placeholder {
+  color: var(--text-faint);
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* Grows with its cards instead of overflowing them: a basis-0 flex child
+     spills past the column's bottom padding, which is what used to leave the
+     last card trapped under the quick-add. Still stretches to fill a short
+     column, so an empty list stays a drop target. */
+  flex: 1 0 auto;
+  min-height: 80px;
+  border-radius: var(--r-md);
+}
+

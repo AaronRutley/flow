@@ -1,0 +1,468 @@
+/* ── Title strip ──
+   Nothing but the traffic lights and the theme switch: the window's own row. */
+#titlebar {
+  position: relative;
+  z-index: 50;
+  height: var(--titlebar-height);
+  display: flex;
+  /* The traffic lights centre at ~23px, so a 46px strip centres everything on
+     the same line: dots, gear and theme toggle all share one axis, and the
+     buttons no longer hang below the band when it wears a colour. 7px right
+     padding lands the icon glyphs on the project bar's 14px content edge. */
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 7px;
+  background: var(--page);
+  -webkit-app-region: drag;
+}
+
+#titlebar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  -webkit-app-region: no-drag;
+}
+
+/* ── Project bar ──
+   The project name is the page heading, sitting under the traffic lights, so
+   the board does not repeat it as a second <h1> further down. */
+#project-bar {
+  position: relative;
+  z-index: 45;
+  height: var(--project-bar-height);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  /* 28px left, the same edge the columns' padding draws (0155): the icon
+     slot, the active tab's box and the To do well all start on one line. */
+  padding: 0 14px 0 28px;
+  background: var(--page);
+}
+
+.project-switcher {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  -webkit-app-region: no-drag;
+}
+
+/* Editable in place: click the heading, type, press Enter. */
+#project-title {
+  padding: 2px 8px;
+  margin-left: -8px;
+  border-radius: var(--r-sm);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  outline: none;
+  cursor: text;
+  white-space: nowrap;
+}
+
+#project-title:hover {
+  background: var(--well);
+}
+
+#project-title:focus {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+#project-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+
+#project-button:hover,
+#project-button.open {
+  background: var(--well);
+  color: var(--text);
+}
+
+.project-caret {
+  display: flex;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 40;
+  min-width: 420px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: 0 12px 32px rgba(20, 20, 18, 0.18);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 14px;
+  border: none;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-item + .menu-item {
+  margin-top: 4px;
+}
+
+/* The radio dot on a menu item (0442): quiet grey ring, filled only on the
+   row that states where the card already is. */
+.menu-radio {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: transparent;
+}
+
+.menu-item.checked .menu-radio {
+  border-color: var(--text-dim);
+  box-shadow: inset 0 0 0 3.5px var(--surface);
+  background: var(--text-dim);
+}
+
+/* An eyebrow between menu families (0430): a label, not a button. The rule
+   gets air on both sides (0441) so the families read as separate rooms. */
+.menu-group {
+  margin: 10px 0 2px;
+  padding: 10px 14px 2px;
+  border-top: 1px solid var(--border);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.menu-item:hover {
+  background: var(--well);
+}
+
+.menu-item.current {
+  background: var(--well);
+}
+
+.menu-item.current .menu-title::after {
+  content: '·';
+  margin-left: 6px;
+  color: var(--accent);
+}
+
+/* The actions are a different kind of thing to picking a project, so one
+   divider sets them apart — above the first action only. */
+.menu-item.add {
+  margin-top: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+/* A run of actions reads as one group: no repeated divider between them, and
+   the same 4px rhythm the project list keeps. */
+.menu-item.add + .menu-item.add {
+  margin-top: 4px;
+  padding-top: 13px;
+  border-top: none;
+}
+
+.menu-title .icon {
+  display: inline-block;
+  vertical-align: -2px;
+  margin-right: 6px;
+}
+
+.menu-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.menu-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.menu-path {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Tab bar ── */
+#toolbar {
+  position: relative;
+  z-index: 40;
+  height: var(--toolbar-height);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  /* Shares the board's 28px left edge, so the Board tab's box lands flush
+     with the To do column and the project icon above (0155). */
+  padding: 0 12px 8px 28px;
+  background: var(--page);
+  min-width: 0;
+}
+
+#session-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+#session-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tool-tab {
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* Open is a state, not a place you are: a small dot on the button's corner
+   says the terminal (or env panel) is live, while the board keeps the full
+   active styling to itself. */
+.tool-tab.open::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* Docks the tool cluster at the bar's right-hand end. Branch & env retired
+   to the plugin archive (0376); the cluster is empty until tools return. */
+#toolbar-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.text-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.text-button:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.text-button.primary {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--page);
+}
+
+.text-button.primary:hover {
+  color: var(--page);
+  opacity: 0.9;
+}
+
+#session-tabs {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+#session-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  background: var(--well);
+  color: var(--text);
+}
+
+/* ── The nav bubble (0310) ──
+   iOS manners for the main nav: one glassy highlight lives behind the
+   home tabs and slides between them on hover instead of each tab painting
+   its own. The tabs stay transparent so the bubble reads through. */
+.home-tab:hover {
+  background: transparent;
+}
+
+#nav-bubble {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.35);
+  backdrop-filter: blur(14px) saturate(1.35);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 220ms cubic-bezier(0.3, 0.9, 0.35, 1),
+    width 220ms cubic-bezier(0.3, 0.9, 0.35, 1),
+    opacity 140ms ease;
+}
+
+/* A fresh arrival appears in place; only travel between tabs animates. */
+#nav-bubble.teleport {
+  transition: opacity 140ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #nav-bubble {
+    transition: opacity 140ms ease;
+  }
+}
+
+.tab.active {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+  box-shadow: var(--shadow-card);
+}
+
+/* The active home tab wears the resting bubble instead of the boxy card
+   (0371): active and hover are one flowing highlight, not two languages. */
+.home-tab.active {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--text);
+}
+
+.home-tab {
+  padding: 0 10px;
+}
+
+/* A session tab mid-drag dims like a doc row does (0207). */
+.tab.dragging {
+  opacity: 0.4;
+}
+
+.tab-needs {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--amber-text);
+  flex-shrink: 0;
+}
+
+/* Inline rename: the input wears the tab's own type so nothing jumps. */
+.tab-rename {
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 140px;
+  padding: 0;
+}
+
+.tab-close {
+  display: flex;
+  align-items: center;
+  color: var(--text-faint);
+  border-radius: var(--r-sm);
+  padding: 2px;
+}
+
+.tab-close:hover {
+  color: var(--text);
+  background: var(--surface-sunken);
+}
+
+.icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text-dim);
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+}
+
+.icon-button:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+/* For chrome that should read as an icon and nothing else. */
+.icon-button.ghost {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-faint);
+}
+
+.icon-button.ghost:hover {
+  border-color: transparent;
+  background: var(--well);
+  color: var(--text);
+}
+
+.pill-icon {
+  display: flex;
+  color: var(--text-dim);
+}

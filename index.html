@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flow</title>
+  <!-- The renderer's Content-Security-Policy (0320). Local-file app, so:
+       scripts only from the app's own files (no inline, no eval, no remote);
+       no plugins or base-tag tricks; images and fonts from the app, disk
+       (attachments, project icons) and data URIs; inline style attributes
+       allowed because vendored UI (xterm, Toast UI) positions through them;
+       frames only for local knowledge docs; nothing may open a network
+       connection. Loosen a directive only with a reason written here. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; img-src 'self' file: data:; font-src 'self' file: data:; style-src 'self' 'unsafe-inline'; frame-src 'self' file:; connect-src 'none'; media-src 'none'">
+  <script src="src/renderer/boot-theme.js"></script>
+  <link rel="stylesheet" href="node_modules/@xterm/xterm/css/xterm.css">
+  <link rel="stylesheet" href="node_modules/@toast-ui/editor/dist/toastui-editor.css">
+  <!-- Styles, split per area (0239); link order preserves the cascade. -->
+  <link rel="stylesheet" href="src/renderer/styles/tokens.css">
+  <link rel="stylesheet" href="src/renderer/styles/chrome.css">
+  <link rel="stylesheet" href="src/renderer/styles/board.css">
+  <link rel="stylesheet" href="src/renderer/styles/settings.css">
+  <link rel="stylesheet" href="src/renderer/styles/modal.css">
+  <link rel="stylesheet" href="src/renderer/styles/cards.css">
+  <link rel="stylesheet" href="src/renderer/styles/session.css">
+  <link rel="stylesheet" href="src/renderer/styles/docs.css">
+  <link rel="stylesheet" href="src/renderer/styles/detail.css">
+  <link rel="stylesheet" href="src/renderer/styles/misc.css">
+</head>
+<body>
+  <!-- Title strip — just the drag region the traffic lights sit in -->
+  <div id="titlebar">
+    <div id="titlebar-right">
+      <!-- Dev update (0228, moved top-right in 0233): appears only in a dev
+           build when app files changed on disk; clicking applies the reload
+           or relaunch once, on purpose, instead of every save bouncing the
+           window. Named in full so it's clear the app itself changes. -->
+      <button class="tab tool-tab hidden" id="update-button"></button>
+      <!-- Project settings (0236): the gear lives up here with the theme
+           toggle, out of the toolbar's way. -->
+      <button class="icon-button ghost" id="open-settings" title="Project settings"></button>
+      <button class="icon-button ghost" id="toggle-theme" title="Toggle light and dark"></button>
+    </div>
+  </div>
+
+  <!-- Project bar — the heading, under the traffic lights rather than beside
+       them, so the board does not repeat it further down -->
+  <div id="project-bar">
+    <div class="project-switcher">
+      <!-- The tip is set per state by renderProjectSwitcher (0470). -->
+      <span id="project-icon-slot" data-tip="Add an app icon — a square (1:1) image">
+        <span id="project-icon"></span>
+        <button id="icon-upload" aria-label="Upload a project icon"></button>
+      </span>
+      <h1 id="project-title" contenteditable="plaintext-only" spellcheck="false"></h1>
+      <button id="project-button" title="Switch project">
+        <span class="project-caret"></span>
+      </button>
+      <div id="project-menu" class="menu hidden"></div>
+    </div>
+  </div>
+
+  <!-- Tab bar — the board, the tools that act on it, then every open session -->
+  <div id="toolbar">
+    <!-- The sections (0241, trimmed 0258): Planning is the knowledgebase,
+         Development the board.
+         Names come from settings — renamable, defaults if blank. -->
+    <!-- No native titles on the labeled tabs (0278): the label is the
+         explanation, and the browser tooltip under the logo read as
+         stray UI. -->
+    <button class="tab home-tab" id="tab-docs"></button>
+    <button class="tab home-tab active" id="tab-board"></button>
+    <!-- Analytics (0410, formerly Insights): the second vault — reports,
+         links and analytics docs beside the board. Internal names keep
+         'insights' for stability; only the label and glyph changed. -->
+    <button class="tab home-tab" id="tab-insights"></button>
+
+    <div id="session-tabs"></div>
+
+    <!-- The tools live at the right-hand end of the bar, away from the
+         views and the sessions they act beside. The group owns the right
+         dock, so the Env button can hide without moving the terminal. -->
+    <div id="toolbar-tools">
+    </div>
+  </div>
+
+  <div id="app">
+    <!-- Board view -->
+    <div id="board-view" class="view">
+      <div id="columns">
+        <section class="column" data-column="to-do">
+          <header>
+            <span class="column-icon" data-icon="circle"></span>
+            <div class="column-heading">
+              <h2>To do</h2>
+            </div>
+            <!-- The backlog door rides To do's header (0383), where queued
+                 work naturally continues from. -->
+            <button class="icon-button ghost small" id="foot-backlog" data-foot-count="backlog"
+                    data-tip="View backlog — queued for later"></button>
+            <span class="count-chip">0</span>
+          </header>
+          <div class="column-body">
+            <div class="cards" data-column="to-do"></div>
+          </div>
+        </section>
+
+        <section class="column" data-column="doing">
+          <header>
+            <span class="column-icon" data-icon="record"></span>
+            <div class="column-heading">
+              <h2>Doing</h2>
+            </div>
+            <span class="count-chip">0</span>
+          </header>
+          <div class="column-body">
+            <div class="cards" data-column="doing"></div>
+          </div>
+        </section>
+
+        <section class="column" data-column="done">
+          <header>
+            <span class="column-icon" data-icon="tick"></span>
+            <div class="column-heading">
+              <h2>Done</h2>
+            </div>
+            <!-- The sweep rides the header's top right (0306), with the
+                 term button's quiet manners: hover, or not at all when
+                 Done is empty. The archive door sits beside it (0383) with
+                 its own glyph, so viewing and sweeping never blur. -->
+            <button class="icon-button ghost small hidden" id="archive-done-button"
+                    data-tip="Move everything in Done to the archive"></button>
+            <button class="icon-button ghost small" id="foot-archive" data-foot-count="archive"
+                    data-tip="View archive — finished and retired cards"></button>
+            <span class="count-chip">0</span>
+          </header>
+          <div class="column-body">
+            <div class="cards" data-column="done"></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- The design bar (0382): FigJam manners — the make-things actions
+           float bottom centre of the development screen, out of the columns'
+           anatomy, with room for user-added actions later. The terminal
+           toggle keeps its id and its old contract: open types nothing, the
+           accent glyph is the open state. -->
+      <div id="design-bar">
+        <button class="icon-button ghost" id="quick-add-button" data-tip="Add a new task"></button>
+        <button class="icon-button ghost" id="global-term-button" data-tip="Open the terminal"></button>
+      </div>
+
+      <!-- Global terminal — a scratch session beside the board, for loops,
+           one-off commands and extra agents that belong to no card -->
+      <div class="resize-handle hidden" data-resize="board"></div>
+      <div id="board-term-pane" class="hidden">
+        <div id="board-term-header">
+          <!-- Filled by presentTermPane with the project, the room and the CLI
+               actually launched; empty until then so it can't name a command
+               this machine doesn't run. -->
+          <!-- Info (0262, moved ahead of the heading in 0271): where this
+               shell actually stands — the loaded path and the branch — for
+               when the user's own git or claude setup doesn't make it
+               obvious. -->
+          <div class="term-info-wrap">
+            <button class="icon-button ghost small" id="term-info"
+                    data-tip="The path and branch this terminal is working in"></button>
+            <div id="term-info-menu" class="menu hidden"></div>
+          </div>
+          <span id="board-term-label"></span>
+          <!-- One-click goals: each icon types a ready-made brief into the
+               terminal. Typed, never sent — Enter stays yours. data-tip is
+               the instant styled tooltip; these buttons carry no native
+               title, which is slow to appear and easy to miss. -->
+          <!-- Labelled since 0245 — these are goals, and a bare glyph made
+               them easy to forget. The pin and bottom-dock toggles left in
+               the same pass: one shape, beside the board. -->
+          <div id="board-term-tools">
+            <!-- Actions (0393, renaming 0380): the ready-made goals behind
+                 one labelled menu, each item explained by its data-tip,
+                 with room for user-added goals later. -->
+            <div class="quick-start-wrap">
+              <button class="term-tool" id="term-quick-start"></button>
+              <div id="quick-start-menu" class="menu hidden">
+                <button class="menu-item" id="term-clear-todos"
+                        data-tip="Process to-dos — types the goal, Enter stays yours"></button>
+                <!-- Draft PR (0261): a goal like its siblings — typed, never
+                     sent — so nothing ships a PR unattended. -->
+                <button class="menu-item" id="term-draft-pr"
+                        data-tip="Draft PR — types the goal, Enter stays yours"></button>
+              </div>
+            </div>
+            <button class="term-tool" id="board-term-close"
+                    data-tip="Hide the pane. Shift-click ends the session"></button>
+          </div>
+        </div>
+        <div id="board-term-stack"></div>
+      </div>
+    </div>
+
+    <!-- Docs view — the product knowledgebase: folders and markdown files in
+         a collapsible sidebar, the document beside them, and the same global
+         terminal dockable on the right. -->
+    <div id="docs-view" class="view hidden">
+      <!-- One row for the library itself, so the terminal can dock beneath
+           the whole thing when the pane is set to the bottom. -->
+      <div id="docs-main-row">
+        <!-- The sidebar (0279, settled 0286): a fifth of the row, every
+             folder and doc, always present — only focus mode clears it. -->
+        <aside id="kb-side">
+          <!-- The old tree, returned whole (0280): folder and file renames,
+               reorder by drag, per-folder collapse. New doc rides as the
+               list's last row (0286). -->
+          <div id="kb-tree"></div>
+          <!-- The plus lives in the foot (0290), back to 0165's shape: the
+               header above stays quiet, and the menu pops upward. -->
+          <footer id="kb-side-foot">
+            <!-- Analytics only (0447): Insights keeps its terminal away
+                 unless asked (0398) — this is the ask. Toggles a session
+                 standing in this project's insights folder. -->
+            <button class="icon-button ghost small hidden" id="kb-term-button"
+                    data-tip="Toggle a terminal for this project's analytics"></button>
+            <div class="kb-add-switcher">
+              <button class="icon-button ghost small" id="kb-add-button"
+                      data-tip="New document or folder"></button>
+              <!-- One left-click menu, three makes (0394, 0400): Document,
+                   Folder, Link — a link opens in the real browser, with no
+                   terminal (0398). -->
+              <div id="kb-add-menu" class="menu hidden">
+                <button class="menu-item" id="kb-add-doc">Document</button>
+                <button class="menu-item" id="kb-add-folder">Folder</button>
+                <button class="menu-item" id="kb-add-bookmark">Link</button>
+              </div>
+            </div>
+          </footer>
+        </aside>
+        <!-- One grouped unit (0286), the way a task card pairs them: the
+             header crowns the doc and the CLI, which share the row below. -->
+        <div id="kb-group">
+          <div id="kb-doc-header">
+            <!-- Focus (0280), wearing an expand glyph since 0290: the
+                 sidebar and the terminal step away so the doc has the room;
+                 Esc (or the button) brings them back. -->
+            <button class="icon-button ghost small" id="kb-focus"
+                    data-tip="Expand: just the doc. Esc brings the rest back"></button>
+            <span id="kb-doc-title"></span>
+            <span id="kb-save-status" class="save-status" aria-live="polite"></span>
+            <!-- In-app actions are small icons with instant tooltips (0184).
+                 Ordered by weight (0251). -->
+            <div id="kb-doc-actions">
+              <button class="icon-button ghost small hidden" id="kb-open-browser"
+                      data-tip="Open this bookmark in your browser"></button>
+              <button class="icon-button ghost small hidden" id="kb-tell-agent"
+                      data-tip="Type this doc's path into the terminal"></button>
+              <button class="icon-button ghost small" id="kb-delete-doc"
+                      data-tip="Archive this doc — nothing is ever destroyed"></button>
+              <button class="icon-button ghost small" id="kb-reveal-doc"
+                      data-tip="Show the source file on disk"></button>
+              <button class="icon-button ghost small" id="kb-doc-close"
+                      data-tip="Close the doc — back to the index"></button>
+            </div>
+          </div>
+          <div id="kb-doc-row">
+            <!-- The quiet index (0293): Planning stands here between docs —
+                 just the background and one New document button, which the
+                 doc morphs out of. -->
+            <div id="kb-index">
+              <div id="kb-home-list"></div>
+            </div>
+            <div id="kb-main">
+              <div id="kb-doc-content"></div>
+            </div>
+            <!-- The docs terminal docks into this row (placeTermPane). -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Insights (0385): no view of its own — the docs view above serves
+         both tabs, pointed at the insights/ vault when this tab is up. -->
+
+    <!-- Backlog and archive — the shelves either side of the board: queued
+         work that has not earned a column yet, and finished work at rest.
+         One card list each, sortable, with the moves back to the board. -->
+    <div id="backlog-view" class="view hidden">
+      <!-- Dressed as a wide board column: same header anatomy, same well,
+           with its own close back to the board (0173). -->
+      <div class="shelf">
+        <header class="shelf-head">
+          <span class="column-icon" data-icon="inbox"></span>
+          <div class="column-heading">
+            <h2>Backlog</h2>
+          </div>
+          <span class="count-chip" data-shelf-count="backlog">0</span>
+          <button class="icon-button ghost small shelf-close" data-shelf-close
+                  title="Back to the board"></button>
+        </header>
+        <div class="shelf-body">
+          <p class="shelf-hint">Queued for later. Send a card here from its document, and back to the board when its time comes.</p>
+          <div class="cards shelf-cards" data-column="backlog"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="archive-view" class="view hidden">
+      <div class="shelf">
+        <header class="shelf-head">
+          <span class="column-icon" data-icon="archive"></span>
+          <div class="column-heading">
+            <h2>Archive</h2>
+          </div>
+          <span class="count-chip" data-shelf-count="archive">0</span>
+          <button class="icon-button ghost small shelf-close" data-shelf-close
+                  title="Back to the board"></button>
+        </header>
+        <div class="shelf-body">
+          <p class="shelf-hint">Finished and retired cards. Everything keeps its markdown; restore brings one back to To do.</p>
+          <div class="cards shelf-cards" data-column="archive"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Session view -->
+    <!-- The dashboard (0406): the front door from the project menu — a
+         short welcome on the first run, the projects as cards after. -->
+    <div id="dashboard-view" class="view hidden">
+      <div id="dashboard-inner">
+        <!-- The hero (0427, contained 0446): the pitch cover as the
+             dashboard's masthead, worn at the content's own width — a
+             rounded block over the column the project cards share, not an
+             edge-to-edge band. Colors are fixed light like the deck, so it
+             reads the same in either theme. -->
+        <div id="dashboard-hero">
+          <div id="dashboard-hero-inner">
+            <div id="dashboard-hero-squircle">
+              <img src="assets/flow-logo.png" alt="Flow logo">
+            </div>
+            <h1>Flow</h1>
+            <p>A tool for product builders and vibe coders, to stay in the flow.</p>
+          </div>
+        </div>
+        <!-- First run only: the three steps, in the app's own quiet clothes —
+             the hero above carries the branding now (0427). -->
+        <div id="dashboard-welcome" class="hidden">
+          <h2>Welcome to Flow</h2>
+          <p>A board where cards become live agent sessions. Three steps to
+             your first one:</p>
+          <ol>
+            <li>Add a project, any local repo</li>
+            <li>Write a card for something you want built</li>
+            <li>Drag it into Doing and talk to the session that opens</li>
+          </ol>
+        </div>
+        <div id="dashboard-projects"></div>
+      </div>
+    </div>
+
+    <div id="session-view" class="view hidden">
+      <div id="doc-pane">
+        <div id="doc-header">
+          <div id="doc-heading">
+            <span id="doc-title" contenteditable="plaintext-only" spellcheck="false"
+                  title="Click to rename"></span>
+            <!-- The autosave receipt: "Saving…" while an edit is pending,
+                 "Saved" once it is on disk, then it fades away -->
+            <span id="doc-save-status" class="save-status" aria-live="polite"></span>
+          </div>
+          <!-- The facts you act on: the pull request, the running site, and one
+               hover for the branch, worktree and card id behind them -->
+          <div id="doc-links"></div>
+        </div>
+        <div id="doc-content"></div>
+        <!-- One handover: edits to the context and new follow ups go to the
+             agent together, when you say so -->
+        <div id="doc-footer">
+          <button id="update-agent" class="text-button primary hidden">
+            <span class="pill-icon"></span>Update agent with new context</button>
+        </div>
+      </div>
+      <div class="resize-handle" data-resize="split"></div>
+      <div id="term-pane">
+        <div id="term-header">
+          <span id="term-label"></span>
+          <span id="term-status"></span>
+        </div>
+        <div id="term-stack"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Per-project choices: how work starts, and what prepare means -->
+  <!-- Project settings as a full screen (0201, reshaped 0225): a left
+       sidebar of areas, the chosen area's settings on the right, no modal
+       chrome and no close button — the tabs above are the way out. -->
+  <div id="settings-modal" class="hidden">
+    <div id="settings-panel">
+      <div id="settings-side">
+        <!-- Redone in 0283: one heading, then the two families with the
+             divide drawn plainly — this project's settings above the rule,
+             the application's below it. -->
+        <span id="settings-title">Settings</span>
+        <nav id="settings-nav">
+          <!-- Projects (0416): every project Flow knows, not just the active
+               one — clicking a name opens that project's settings screen. -->
+          <span class="settings-nav-group">Projects</span>
+          <div id="settings-projects-nav"></div>
+          <!-- Briefs rests here (0413) — uncomment this item and the briefs
+               area below to bring it back.
+          <button class="settings-nav-item" data-area="briefs">Briefs</button>
+          -->
+          <!-- Plugins hides with 0414 until the plugin system is real —
+               uncomment this item and the plugins area below to bring it back.
+          <button class="settings-nav-item" data-area="plugins">Plugins</button>
+          -->
+          <div class="settings-nav-divider"></div>
+          <span class="settings-nav-group">Application</span>
+          <button class="settings-nav-item" data-area="agent">Agent</button>
+          <button class="settings-nav-item" data-area="prompts">Prompts</button>
+          <button class="settings-nav-item" data-area="sessions">Sessions</button>
+          <!-- Appearance rests with 0420: its one setting was renaming the
+               main menu sections, and those names are fixed for now.
+          <button class="settings-nav-item" data-area="appearance">Appearance</button>
+          -->
+        </nav>
+      </div>
+      <div id="settings-main">
+        <!-- Full screen since 0416, so the tab bar is no longer the way out;
+             this close is, along with Escape. -->
+        <button class="icon-button ghost" id="settings-close" data-tip="Close settings"></button>
+        <div id="settings-body">
+          <!-- General retired with 0412: Working style joined Dev command and
+               Port base (0375) as stored-but-not-shown — projects keep the
+               mode they have, new ones take the default. -->
+          <!-- Briefs rests here (0413): the stored preparePrompt and
+               shapePrompt keep working; only the editing UI is away. To
+               restore, uncomment this block, the nav item above, and the
+               briefs lines in settings.js.
+          <div class="settings-area hidden" data-area="briefs">
+            <div class="setting">
+              <span class="setting-label">Prepare brief</span>
+              <textarea id="setting-prepare" rows="6" spellcheck="false"></textarea>
+              <span class="setting-hint">What the Prepare button asks the agent to do. {pr} becomes the number. Empty means the default brief.</span>
+            </div>
+            <div class="setting">
+              <span class="setting-label">Shaping prompt</span>
+              <textarea id="global-shape" rows="7" spellcheck="false"></textarea>
+              <span class="setting-hint">What the Shape button asks the small model to do, in every project. {path} and {title} are substituted. Empty means the built-in brief.</span>
+            </div>
+          </div>
+          -->
+          <!-- The plugin features retired to local/plugins (0376): Inspo,
+               New tab, Branch & env, Custom themes, PR groups. The area
+               returns when a real plugin system brings them back. -->
+          <!-- Plugins hides with 0414, together with its nav item above.
+          <div class="settings-area hidden" data-area="plugins">
+            <div class="setting">
+              <span class="setting-label">Plugins</span>
+              <span class="setting-hint">The early plugin experiments were retired while Flow's plugin system is designed for real.</span>
+            </div>
+          </div>
+          -->
+          <!-- Usage removed with 0415: Flow no longer meters its own model
+               calls; the CLIs' own /cost reporting covers it. -->
+          <!-- One screen per project (0416): whose settings these are, where
+               its files live, and the way out of Flow's list. -->
+          <div class="settings-area hidden" data-area="project">
+            <h3 id="settings-project-name" class="settings-area-heading"></h3>
+            <!-- The project's own face (0444): its name, saved with the
+                 footer's Save, and its icon, applied the moment it is
+                 picked — the dialog is its own commitment. -->
+            <div class="setting">
+              <span class="setting-label">Name <em id="settings-project-title-dirty" class="setting-dirty hidden">unsaved</em></span>
+              <input type="text" id="settings-project-title" spellcheck="false">
+              <span class="setting-hint">What this project is called everywhere in Flow. The folders on disk keep their own names. Save below to apply.</span>
+            </div>
+            <div class="setting">
+              <span class="setting-label">Icon</span>
+              <div class="setting-buttons">
+                <button class="text-button" id="settings-project-icon">Choose an image…</button>
+                <button class="text-button hidden" id="settings-project-icon-remove">Remove icon</button>
+              </div>
+              <span class="setting-hint">A square image, worn at the squircle crop beside the project's name. Applies straight away.</span>
+            </div>
+            <div class="setting">
+              <span class="setting-label">Files</span>
+              <code id="settings-project-path" class="settings-path"></code>
+              <span class="setting-hint">Where this project's cards and docs are saved — every board column is a folder of markdown files you can open in anything.</span>
+            </div>
+            <div class="setting">
+              <span class="setting-label">Remove project</span>
+              <span class="setting-hint">Takes this project out of Flow's list. Nothing is deleted — the repo and the board folder stay on disk exactly where they are, and adding the folder again brings it back.</span>
+              <div><button class="text-button" id="settings-remove-project">Remove from Flow</button></div>
+            </div>
+          </div>
+          <div class="settings-area hidden" data-area="agent">
+            <div class="setting">
+              <span class="setting-label">On this Mac</span>
+              <div id="cli-status"></div>
+              <span class="setting-hint">Shape, Draft, Research and Review spawn these CLIs. They do not connect to a Claude or Codex app. A missing required row is why those buttons sit on “Asking Claude” and never finish.</span>
+            </div>
+            <div class="setting">
+              <span class="setting-label">Default terminal command</span>
+              <input type="text" id="global-terminal-command" spellcheck="false" placeholder="claude">
+              <span class="setting-hint">The CLI every session launches — cards, the board terminal, the docs terminal. A command name like <code>claude</code> or <code>codex</code>, or a full path to a script. A card's session launches it on open so the agent sits ready; prompts are only ever pasted for you to send. Empty means <code>claude</code>.</span>
+            </div>
+            <!-- Sandbox mode retired with 0418: the default terminal command
+                 covers it — point it at any wrapper script you like. -->
+          </div>
+          <!-- Prompts (0445): every prompt Flow runs on your behalf, a
+               section per job. Shaping first (0429) — the command that
+               starts the model and the brief it runs, pre-filled with the
+               built-ins so what you read is what runs. More sections join
+               as more prompts open up. -->
+          <div class="settings-area hidden" data-area="prompts">
+            <h3 class="settings-area-heading">Shaping</h3>
+            <div class="setting">
+              <span class="setting-label">Model command</span>
+              <input type="text" id="shape-command" spellcheck="false" placeholder="claude -p">
+              <span class="setting-hint">How Shape starts the model — a CLI and its flags, e.g. <code>claude -p</code>. The model, prompt and streaming flags are appended. Empty means the default.</span>
+            </div>
+            <div class="setting">
+              <span class="setting-label">Model</span>
+              <input type="text" id="shape-model" spellcheck="false" placeholder="haiku">
+              <span class="setting-hint">The claude model shaping runs on — <code>haiku</code> is the default and keeps shapes near-instant; <code>sonnet</code> writes richer plans. Wins over any <code>--model</code> in the command above. Emptying the field restores the default.</span>
+            </div>
+            <div class="setting">
+              <span class="setting-label">Shaping prompt</span>
+              <textarea id="shape-instructions" rows="14" spellcheck="false"></textarea>
+              <span class="setting-hint">The instructions Shape sends. The card's title, its context and a glance at the repository are appended after this, whatever it says. Restoring the default is emptying the field and saving.</span>
+            </div>
+            <!-- Starting a task (0457): the go-ahead Start work fires, as a
+                 template with the card's facts substituted at fire time. -->
+            <h3 class="settings-area-heading">Starting a task</h3>
+            <div class="setting">
+              <span class="setting-label">Start prompt</span>
+              <textarea id="start-prompt" rows="5" spellcheck="false"></textarea>
+              <span class="setting-hint"><code>[card-path]</code>, <code>[task-name]</code> and <code>[project-name]</code> are substituted when Start work fires. Restoring the default is emptying the field and saving.</span>
+            </div>
+          </div>
+          <div class="settings-area hidden" data-area="sessions">
+            <div class="setting">
+              <span class="setting-label">Active sessions</span>
+              <div id="session-list"></div>
+              <span class="setting-hint">Terminal sessions running in tmux, across every project — they survive reloads and project switches. End one to free it.</span>
+            </div>
+            <!-- Cleanup in bulk (0419): the whole lot, or just the ones that
+                 have sat around. Both ask before acting. -->
+            <div class="setting">
+              <span class="setting-label">Clean up</span>
+              <div class="session-cleanup">
+                <button class="text-button" id="sessions-end-all">End all</button>
+                <span class="session-cleanup-join">or end sessions older than</span>
+                <input type="number" id="sessions-age-days" min="1" max="365" step="1" value="7">
+                <span class="session-cleanup-join">days</span>
+                <button class="text-button" id="sessions-end-old">End older</button>
+              </div>
+              <span class="setting-hint">Ending a session stops its tmux session and whatever is running inside it. Cards, docs and everything on disk stay exactly where they are.</span>
+            </div>
+          </div>
+          <!-- Appearance rests with 0420, together with its nav item above:
+               the section names are fixed while renaming is off. Stored
+               custom names are cleared at launch (init.js).
+          <div class="settings-area hidden" data-area="appearance">
+            <div class="setting">
+              <span class="setting-label">Section names</span>
+              <div class="setting-control" id="setting-sections">
+                <label class="section-name-row"><span>Planning</span><input type="text" id="setting-section-planning" spellcheck="false" placeholder="Planning"></label>
+                <label class="section-name-row"><span>Development</span><input type="text" id="setting-section-development" spellcheck="false" placeholder="Development"></label>
+              </div>
+              <span class="setting-hint">What the three sections are called in the tab bar, in every project. Only the names change — the folders on disk keep theirs. Blank means the default.</span>
+            </div>
+          </div>
+          -->
+        </div>
+        <div id="settings-footer">
+          <span id="global-version" class="setting-hint"></span>
+          <button class="text-button primary" id="settings-save">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- The open card is a room, not an overlay (0188): it fills the content
+       area below the nav, which stays clickable above it. The panel keeps
+       its ids from its modal days; only the shell changed. -->
+  <div id="card-view" class="hidden">
+    <div id="card-modal-panel">
+      <!-- The header crowns the whole panel (0272): the title runs above
+           the terminal column too, with the number tucked quietly after
+           it. Below, the document and the shell share the row. -->
+      <div id="card-modal-header">
+        <span id="card-modal-title" contenteditable="plaintext-only" spellcheck="false"
+              title="Click to rename"></span>
+        <span id="card-modal-id" data-tip="Card id"></span>
+        <span id="modal-save-status" class="save-status" aria-live="polite"></span>
+        <!-- In-app actions are icons with instant tooltips (0184, 0189). -->
+        <div id="card-modal-actions">
+          <button class="icon-button ghost small hidden" id="card-session-log"
+                  data-tip="Session log"></button>
+          <!-- Move to another project (0312): the words travel, the
+               plumbing stays behind. -->
+          <div class="card-move-wrap">
+            <button class="icon-button ghost small" id="card-modal-move"
+                    data-tip="Move this card"></button>
+            <div id="card-modal-move-menu" class="menu hidden"></div>
+          </div>
+          <button class="icon-button ghost small" id="card-modal-archive"
+                  data-tip="Archive"></button>
+          <button class="icon-button ghost small hidden" id="card-modal-shape"></button>
+          <button class="icon-button ghost small" id="card-modal-close" data-tip="Close"></button>
+        </div>
+      </div>
+      <div id="card-modal-row">
+        <div id="card-modal-main">
+          <div id="card-modal-body"></div>
+          <div id="card-modal-footer">
+            <button class="text-button" id="card-modal-save">Save and Close</button>
+            <!-- The ways in (0436): Chat opens the session for questions
+                 first; Let's go opens it and fires the work. Both launch
+                 the preferred agent from settings. -->
+            <div id="card-modal-footer-actions">
+              <!-- The handover (0451, after the session view's 0199 pill):
+                 edits and new checklist items go to the working agent
+                 together, when you say so. -->
+              <button class="text-button hidden" id="card-modal-update-agent">Update agent with new context</button>
+              <!-- An unshaped task can still start (0456): the agent takes
+                   the raw ask as its brief instead of a written plan. -->
+              <button class="text-button hidden" id="card-modal-start-raw">Start task with coding agent</button>
+              <button class="text-button hidden" id="card-modal-chat">Chat about this task</button>
+              <button class="text-button primary" id="card-modal-go">Save and shape</button>
+            </div>
+          </div>
+        </div>
+        <!-- A shaped card's second column: a fresh shell — nothing typed,
+             nothing run — and the way into the work. -->
+        <div id="card-modal-term" class="hidden">
+          <div id="card-modal-term-frame"></div>
+          <!-- The start actions moved to the document footer with 0436:
+               the pane arrives already working, so it needs no strip. -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- The one confirmation surface (0187): every destructive act asks the
+       same way — one sentence, Cancel, and the act by name. Esc and the
+       backdrop both mean Cancel. -->
+  <div id="confirm-modal" class="hidden">
+    <div id="confirm-panel">
+      <p id="confirm-message"></p>
+      <div id="confirm-actions">
+        <button class="text-button" id="confirm-cancel">Cancel</button>
+        <button class="text-button primary" id="confirm-go">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Research asks in a room of its own (0191), shaped like the new-card
+       modal: the topic, the shelf it lands on, and Go. Esc closes. -->
+  <div id="kb-research-modal" class="hidden">
+    <div id="kb-research-panel">
+      <input type="text" id="kb-research-topic"
+             placeholder="Topic, e.g. a competitor or a market" spellcheck="false">
+      <div id="kb-research-actions">
+        <select id="kb-research-folder"></select>
+        <button class="text-button primary" id="kb-research-go">Go</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bookmarks ask the same way research does (0194): the link, where it
+       files, tags, and whether an agent should read it first. -->
+  <div id="kb-bookmark-modal" class="hidden">
+    <div id="kb-bookmark-panel">
+      <input type="text" id="kb-bookmark-url" placeholder="Link, e.g. https://…" spellcheck="false">
+      <input type="text" id="kb-bookmark-tags" placeholder="Tags, comma separated (optional)" spellcheck="false">
+      <div id="kb-bookmark-actions">
+        <select id="kb-bookmark-folder"></select>
+        <label id="kb-bookmark-process-label">
+          <input type="checkbox" id="kb-bookmark-process" checked>
+          Process with an agent
+        </label>
+        <button class="text-button primary" id="kb-bookmark-save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Adding a card gets a room of its own: a title line, a context field and
+       the two ways out. No chrome — Esc closes, Enter saves and shapes,
+       Shift+Enter breaks the line in the context field. Editing an existing
+       card stays with the card modal. -->
+  <div id="card-add-modal" class="hidden">
+    <div id="card-add-panel">
+      <input type="text" id="card-add-title" spellcheck="true" placeholder="What needs doing?">
+      <textarea id="card-add-input" rows="8" spellcheck="true"
+                placeholder="Context, if any — links, constraints, the why."></textarea>
+      <div id="card-add-actions">
+        <button class="text-button" id="card-add-save-only" title="Save the card as written"></button>
+        <button class="text-button primary" id="card-add-save" title="Save, then ask the local claude CLI to draft the plan"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search is summoned with Cmd+K, so it costs the board no space -->
+  <div id="search-overlay" class="hidden">
+    <div class="search-field">
+      <span class="search-icon"></span>
+      <input type="search" id="search" placeholder="Search cards" spellcheck="false">
+      <span class="search-hint">esc</span>
+    </div>
+  </div>
+
+  <!-- Docs quick switcher (Cmd/Ctrl+O): fuzzy jump to any note -->
+  <div id="kb-switcher" class="hidden">
+    <div class="kb-switcher-panel">
+      <input type="text" id="kb-switcher-input" placeholder="Jump to a doc…" spellcheck="false">
+      <div id="kb-switcher-results"></div>
+    </div>
+  </div>
+
+  <!-- One quiet surface for failures, instead of ad-hoc text that may have
+       nowhere to appear -->
+  <div id="toast" class="hidden" role="status" aria-live="polite"></div>
+
+  <script src="node_modules/@xterm/xterm/lib/xterm.js"></script>
+  <script src="node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
+  <script src="node_modules/@xterm/addon-web-links/lib/addon-web-links.js"></script>
+  <script src="node_modules/marked/lib/marked.umd.js"></script>
+  <script src="node_modules/dompurify/dist/purify.min.js"></script>
+  <script src="node_modules/turndown/dist/turndown.js"></script>
+  <script src="node_modules/sortablejs/Sortable.min.js"></script>
+  <!-- The vendored all-in-one editor (0253): the npm dist is the externals
+       build and cannot run from a script tag. Regenerate with
+       `npm run vendor:editor`. -->
+  <script src="lib/toastui-editor-all.js"></script>
+  <script src="lib/icons.js"></script>
+  <script src="lib/term-keys.js"></script>
+  <!-- The renderer, one classic script per area (0239, structure borrowed
+       from temp-flow). Order matters: they share one global scope, and each
+       file's top-level code may lean on what loaded before it. -->
+  <script src="src/renderer/state.js"></script>
+  <script src="src/renderer/icons.js"></script>
+  <script src="src/renderer/projects.js"></script>
+  <script src="src/renderer/env.js"></script>
+  <script src="src/renderer/board.js"></script>
+  <script src="src/renderer/cards.js"></script>
+  <script src="src/renderer/settings.js"></script>
+  <script src="src/renderer/card-modal.js"></script>
+  <script src="src/renderer/sessions.js"></script>
+  <script src="src/renderer/terminal.js"></script>
+  <script src="src/renderer/views.js"></script>
+  <script src="src/renderer/docs.js"></script>
+  <script src="src/renderer/review.js"></script>
+  <script src="src/renderer/theme.js"></script>
+  <script src="src/renderer/init.js"></script>
+</body>
+</html>

@@ -1,0 +1,1178 @@
+/* ── Knowledgebase ── */
+#docs-view {
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  /* No right padding on the view itself: the side-docked terminal runs
+     flush to the window here exactly as it does on the board (0170). The
+     content row below carries its own right inset instead. */
+  padding: 4px 0 28px 28px;
+  gap: 0;
+}
+
+#docs-main-row {
+  margin-right: 28px;
+}
+
+/* Bottom-docked in docs, the view's left padding is already the inset; the
+   pane's own left margin would double it. */
+#docs-view.term-bottom #board-term-pane {
+  margin-left: 0;
+}
+
+#kb-tree {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 10px;
+}
+
+.kb-folder-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 8px;
+  border: none;
+  background: none;
+  color: var(--text-dim);
+}
+
+/* The door to the Space on an image-holding folder (0210): quiet at the
+   head's end, awake on hover like the rest of the sidebar's furniture. */
+
+.kb-folder-head:hover {
+  background: var(--surface-sunken);
+}
+
+/* A folder a dragged doc is hovering: the head lights the way the hover
+   does, held on while the pointer stays (0222). */
+.kb-folder.drag-target > .kb-folder-head {
+  background: var(--surface-sunken);
+  color: var(--text);
+}
+
+/* A folder mid-drag (0223) dims in place; the drag image left the row at
+   full strength a frame earlier. */
+.kb-folder.dragging-folder {
+  opacity: 0.4;
+}
+
+/* A name being edited in place (0224) — a new folder's, or any rename —
+   reads the way Finder's does: the text itself becomes quietly editable
+   on a soft grey, no focus ring, no web-app glow. */
+.kb-folder-name[contenteditable],
+.kb-file-name[contenteditable] {
+  outline: none;
+  background: var(--surface-sunken);
+  border-radius: 4px;
+  padding: 0 4px;
+  margin: 0 -4px;
+  color: var(--text);
+  caret-color: var(--text);
+  min-width: 60px;
+}
+
+/* The not-yet-a-folder row sits like its future self, not like a form. */
+.kb-folder-new .kb-folder-head {
+  cursor: text;
+}
+
+.kb-caret {
+  display: flex;
+  transition: transform 0.15s ease;
+}
+
+.kb-folder.collapsed .kb-caret {
+  transform: rotate(-90deg);
+}
+
+.kb-folder.collapsed .kb-files {
+  display: none;
+}
+
+.kb-folder-name {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kb-file {
+  position: relative;
+  display: flex;
+  width: 100%;
+  padding: 6px 10px 6px 27px;
+  border: none;
+  background: none;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--r-sm);
+}
+
+/* A hairline guide down the folder's docs, so nesting reads without indenting
+   into the far margin. */
+.kb-files {
+  position: relative;
+}
+
+.kb-files::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 2px;
+  bottom: 2px;
+  width: 1px;
+  background: var(--border);
+}
+
+/* Notion-quiet rows: a faint wash on hover, a slightly firmer one when open.
+   No raised card, no shadow — the accent tab at the guide line does the
+   pointing. */
+.kb-file:hover {
+  background: color-mix(in srgb, var(--text) 5%, transparent);
+  color: var(--text);
+}
+
+.kb-file.active {
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  color: var(--text);
+}
+
+.kb-file.active::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.kb-file-name {
+  /* One line with an ellipsis (0313): the flex minimums are what let the
+     span actually shrink instead of stretching the row. */
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  outline: none;
+}
+
+/* The open doc wears its whole name (0313): the active row alone may take
+   the lines it needs. */
+.kb-file.active .kb-file-name {
+  white-space: normal;
+  overflow: visible;
+}
+
+#kb-foot {
+  display: flex;
+  gap: 6px;
+  padding: 10px;
+  border-top: 1px solid var(--border);
+}
+
+#kb-foot .text-button {
+  font-size: 12px;
+  padding: 0 10px;
+  height: 30px;
+}
+
+/* The plus anchors its menu; the menu pops upward from the foot. */
+.kb-add-switcher {
+  position: relative;
+}
+
+#kb-add-menu {
+  top: auto;
+  bottom: calc(100% + 8px);
+  min-width: 130px;
+  padding: 4px;
+}
+
+/* Tighter rows (0394): a two-item make-menu, not a dialog. */
+#kb-add-menu .menu-item {
+  padding: 7px 10px;
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+}
+
+#kb-add-menu .menu-item + .menu-item {
+  margin-top: 2px;
+}
+
+/* Research's own room (0191): the new-card modal's shape at a smaller size —
+   one input, the shelf picker, Go. Bookmarks (0194) share the same room. */
+#kb-bookmark-modal,
+#kb-research-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 10vh 24px;
+  background: rgba(20, 20, 18, 0.24);
+}
+
+:root[data-theme='dark'] #kb-bookmark-modal,
+:root[data-theme='dark'] #kb-research-modal {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+#kb-bookmark-panel,
+#kb-research-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(480px, 100%);
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  background: var(--page);
+  box-shadow: 0 24px 64px rgba(20, 20, 18, 0.28);
+}
+
+#kb-research-topic,
+#kb-bookmark-url,
+#kb-bookmark-tags {
+  font: inherit;
+  font-size: 15px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+}
+
+#kb-research-topic:focus,
+#kb-bookmark-url:focus,
+#kb-bookmark-tags:focus {
+  border-color: var(--border-strong);
+}
+
+#kb-research-actions,
+#kb-bookmark-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#kb-bookmark-process-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* An image doc — the Inspo shelf — sits centered on the reading pane. */
+.kb-image {
+  display: block;
+  max-width: 100%;
+  margin: 0 auto;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+}
+
+#kb-research-actions select,
+#kb-bookmark-actions select {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 12.5px;
+}
+
+/* Inside the group (0286) the doc column is bare; the group's border and
+   corner do the framing. */
+#kb-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--page);
+}
+
+#kb-doc-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* The name renames in place (0190): it hints editable on hover the way the
+   project title does. */
+#kb-doc-name {
+  padding: 3px 7px;
+  margin: -3px 0 -3px -7px;
+  line-height: 1.4;
+  border-radius: var(--r-sm);
+  cursor: text;
+  outline: none;
+}
+
+#kb-doc-name:hover {
+  background: var(--well);
+}
+
+#kb-doc-name:focus {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+/* The title is metadata now (0288, walking back 0268's size-up): folder
+   and filename in the task id's quiet mono voice, so the document itself
+   is what reads large. Renaming in place still works on the name. */
+#kb-doc-title {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-faint);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* Folder and filename both lowercase (0290), like the sidebar. */
+  text-transform: lowercase;
+}
+
+/* The folder crumb ahead of the doc name, quiet so the name still leads. */
+.kb-crumb {
+  color: var(--text-faint);
+  font-weight: 500;
+}
+
+.kb-crumb-sep {
+  color: var(--text-faint);
+  margin: 0 6px;
+}
+
+#kb-doc-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+
+/* Incoming links, set apart under the prose but inside the reading measure. */
+.kb-backlinks {
+  max-width: 68ch;
+  margin: 40px auto 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+/* Under an HTML frame the strip is a slim footer, full width, no reading
+   column to centre in. */
+.html-doc .kb-backlinks {
+  max-width: none;
+  margin: 0;
+  padding: 10px 26px 12px;
+  flex-shrink: 0;
+}
+
+/* A content hit in the switcher is two lines: the doc, then the words that
+   matched, faint and clipped (0182). */
+.kb-switcher-row.content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.kb-switcher-snippet {
+  font-size: 11px;
+  color: var(--text-faint);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kb-backlinks-head {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 8px;
+}
+
+.kb-backlink {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 7px 10px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.kb-backlink:hover {
+  background: var(--surface-sunken);
+}
+
+/* ── Docs quick switcher ── */
+#kb-switcher {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 14vh 24px 24px;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.kb-switcher-panel {
+  width: min(560px, 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--page);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+#kb-switcher-input {
+  width: 100%;
+  padding: 16px 18px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  outline: none;
+}
+
+#kb-switcher-results {
+  max-height: 44vh;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.kb-switcher-row {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.kb-switcher-row.selected,
+.kb-switcher-row:hover {
+  background: var(--surface-sunken);
+}
+
+#kb-doc-content {
+  flex: 1;
+  overflow-y: auto;
+  /* Tight to the chrome above (0288): the doc starts where the header
+     ends, not a band later. */
+  padding: 12px 26px 25vh;
+}
+
+/* The Toast UI editor dresses as part of the pane (0212, reworked 0221):
+   no frame, the toolbar fused to the very top of the page, the app's own
+   icons and type throughout, and no mode switch — the doc is the doc. */
+#kb-editor-host .toastui-editor-defaultUI {
+  border: none;
+  font-family: inherit;
+}
+
+/* The toolbar rides the top edge and stays there while the doc scrolls
+   beneath it. The paint and the layer both live on the sticky element
+   itself (0284): the background was one div deeper, so with the wrong
+   stacking the doc's text drew straight through the strip. A soft grey
+   ground (0365) keeps the strip readable against the white page. */
+#kb-editor-host .toastui-editor-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--well);
+}
+
+/* The document body keeps to the base layer so the sticky strip always
+   wins the overlap. */
+#kb-editor-host .toastui-editor-main {
+  position: relative;
+  z-index: 0;
+}
+
+/* No rule under the strip and no spare band around it (0292): the icons
+   sit vertically centred and the toolbar melts into the page. */
+#kb-editor-host .toastui-editor-defaultUI-toolbar {
+  background: var(--well);
+  border-bottom: none;
+  padding: 6px 14px;
+  height: auto;
+}
+
+#kb-editor-host .toastui-editor-toolbar-group {
+  align-items: center;
+}
+
+/* The buttons wear the app's icons (swapped in at build), sized and
+   rounded like every other icon button — a soft squircle, not a box. */
+#kb-editor-host .toastui-editor-toolbar-icons {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin: 0 1px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-dim);
+}
+
+#kb-editor-host .toastui-editor-toolbar-icons svg {
+  display: block;
+}
+
+#kb-editor-host .toastui-editor-toolbar-icons:hover,
+#kb-editor-host .toastui-editor-toolbar-icons.active {
+  /* Surface, not sunken: on the grey strip a raised white pill reads;
+     the sunken grey vanished into it. */
+  background: var(--surface);
+  color: var(--text);
+}
+
+#kb-editor-host .toastui-editor-toolbar-divider {
+  background: var(--border-strong);
+  margin: 0 8px;
+  height: 16px;
+}
+
+/* WYSIWYG is the one mode; the raw-markdown tab and its bottom bar go. */
+#kb-editor-host .toastui-editor-mode-switch {
+  display: none;
+}
+
+/* The dropdowns (heading levels, the link dialog) sit on the same quiet
+   surface language as the rest of the app. */
+#kb-editor-host .toastui-editor-popup {
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  box-shadow: var(--shadow-raised);
+  background: var(--surface);
+}
+
+/* A reading measure, centred: prose caps at ~70 characters, with the
+   generous bottom padding letting the last paragraph settle above the
+   fold rather than against it. */
+#kb-editor-host .toastui-editor-main .ProseMirror {
+  font-family: inherit;
+  font-size: 15.5px;
+  line-height: 1.7;
+  color: var(--text);
+  max-width: 70ch;
+  margin: 0 auto;
+  padding: 12px 26px 25vh;
+}
+
+#kb-editor-host .toastui-editor-contents {
+  font-family: inherit;
+  font-size: 15.5px;
+  color: var(--text);
+}
+
+/* Toast's double rules under h1/h2 read as 2003; weight and space carry
+   the hierarchy instead. */
+#kb-editor-host .toastui-editor-contents h1,
+#kb-editor-host .toastui-editor-contents h2 {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+#kb-editor-host .toastui-editor-contents h1 {
+  font-size: 1.7em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0.3em 0 0.6em;
+  color: var(--text);
+}
+
+#kb-editor-host .toastui-editor-contents h2 {
+  font-size: 1.28em;
+  letter-spacing: -0.01em;
+  margin: 1.6em 0 0.5em;
+  color: var(--text);
+}
+
+#kb-editor-host .toastui-editor-contents h3 {
+  font-size: 1.08em;
+  margin: 1.4em 0 0.4em;
+  color: var(--text);
+}
+
+#kb-editor-host .toastui-editor-contents p {
+  margin: 0.7em 0;
+  color: inherit;
+}
+
+/* List rhythm: items breathe without drifting apart, and a paragraph
+   inside an item adds no extra air. */
+#kb-editor-host .toastui-editor-contents ul li,
+#kb-editor-host .toastui-editor-contents ol li {
+  margin: 3px 0;
+}
+
+#kb-editor-host .toastui-editor-contents li p {
+  margin: 0;
+}
+
+/* Bullets sit on the first line's centre (0402): Toast's stock 6px nudge
+   was tuned for smaller type, which left the dot floating superscript
+   beside 15.5px/1.7 prose. Ink instead of #ccc while we are here. */
+#kb-editor-host .toastui-editor-contents ul > li::before {
+  margin-top: 11px;
+  background-color: var(--text-faint);
+}
+
+/* The checklist boxes ride the same first-line centre. */
+#kb-editor-host .toastui-editor-contents .task-list-item::before {
+  margin-top: 4px;
+}
+
+/* A blank line inside a doc stays one line tall: Toast pads empty
+   paragraphs with <br> which, at our line-height, doubled the gap. */
+#kb-editor-host .toastui-editor-contents p > br:only-child {
+  line-height: 1.7;
+}
+
+/* Links underline quietly: a hairline a touch below the baseline, in a
+   softer ink than the words, waking on hover. */
+#kb-editor-host .toastui-editor-contents a {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+}
+
+#kb-editor-host .toastui-editor-contents a:hover {
+  text-decoration-color: var(--text-dim);
+}
+
+/* Inline code as a quiet grey chip, not a pink flag. */
+#kb-editor-host .toastui-editor-contents code {
+  background: var(--well);
+  color: var(--text);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+/* The markdown editor reads as one white page (0302, lightening 0221's
+   grey) whatever theme the app wears (0165). The light tokens are
+   re-declared on the pane, so every child that colors itself through a
+   token comes along — and the pane, the toolbar and the prose all share
+   the one paper. */
+#kb-doc-content:not(.html-doc) {
+  background: #ffffff;
+  /* Color is inherited as a computed value, so re-declared tokens alone
+     don't recolor text that never says var(--text) itself — in dark mode
+     the editor inherited the body's light ink onto this paper (0209).
+     Say it here, against the pane's own tokens. */
+  color: var(--text);
+  /* The toolbar fuses to the pane's top edge; the reading padding lives
+     on the prose itself now. */
+  padding: 0;
+  --page: #ffffff;
+  --well: #f0f0f0;
+  --surface: #f8f8f8;
+  --surface-sunken: #e4e4e4;
+  --border: #e0e0e0;
+  --border-strong: #cfcfcf;
+  --text: #1d1d1d;
+  --text-dim: #696969;
+  --text-faint: #989898;
+}
+
+/* With the pane's padding gone, the backlinks strip carries its own. */
+#kb-doc-content:not(.html-doc) .kb-backlinks {
+  margin: 24px auto 0;
+  padding: 18px 26px 60px;
+}
+
+/* An HTML doc paints its own page, so the pane's reading padding would just
+   frame it in dead space. Edge to edge instead — as a column, so the
+   backlinks strip can sit beneath the frame (0181). */
+#kb-doc-content.html-doc {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* A reading measure, centred: prose caps at ~68 characters so the eye never
+   has to track a full-width line, and the generous bottom padding lets the
+   last paragraph settle above the fold rather than against it. */
+.kb-editor {
+  outline: none;
+  min-height: 200px;
+  max-width: 68ch;
+  margin: 0 auto;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.kb-editor h1 {
+  font-size: 1.7em;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.6em;
+}
+
+.kb-editor h2 {
+  font-size: 1.28em;
+  letter-spacing: -0.01em;
+  margin: 1.6em 0 0.5em;
+}
+
+.kb-editor h3 {
+  font-size: 1.08em;
+  margin: 1.4em 0 0.4em;
+}
+
+.kb-editor p,
+.kb-editor li {
+  line-height: 1.7;
+}
+
+.kb-editor blockquote {
+  margin: 1.2em 0;
+  padding-left: 1em;
+  border-left: 2px solid var(--border-strong);
+  color: var(--text-dim);
+}
+
+/* ── The index (0243) ──
+   No sidebar: Planning opens on one page. The four key docs as cards up
+   top, every other doc as a quiet list row under them. A doc open means
+   the index steps aside entirely; the header button walks back. */
+/* No outer box, no page heading (0257): the index opens straight on the
+   doc tiles, the same bare ground the board's columns sit on. */
+#kb-index {
+  display: none;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  padding: 14px 2px 8px;
+}
+
+#docs-view.index-mode #kb-index {
+  display: flex;
+}
+
+#docs-view.index-mode #kb-main {
+  display: none;
+}
+
+/* Big wide cards (0257): the same card language the board's columns use —
+   surface, hairline, soft corner — at a tile size that fills the row. */
+#kb-key-docs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.kb-key-doc {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text-dim);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.kb-key-doc:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.kb-key-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.kb-key-doc.empty .kb-key-title {
+  color: var(--text-dim);
+}
+
+.kb-key-state {
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+/* The new-doc tile reads as an invitation, not an existing doc: dashed
+   hairline until hovered. */
+.kb-key-doc.new-doc {
+  border-style: dashed;
+  background: none;
+}
+
+.kb-key-doc.new-doc:hover {
+  border-style: solid;
+}
+
+/* The table head (0257): quiet uppercase labels introducing the files,
+   with the add menu at its end. */
+#kb-list-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px 6px;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.kb-list-label {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+#kb-doc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: -6px;
+}
+
+
+/* ── Favourites and the tree (0255) ── */
+/* The unpin control hides in the tile's corner until hovered. */
+.kb-key-doc {
+  position: relative;
+}
+
+.kb-fav-off {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  opacity: 0;
+}
+
+.kb-key-doc:hover .kb-fav-off {
+  opacity: 1;
+}
+
+
+/* The docs terminal keeps a quieter toolbar (0263): the board's goals —
+   the whole Quick start menu since 0380 — step out; info and Hide stay. */
+#board-term-pane.docs-room .quick-start-wrap {
+  display: none;
+}
+
+/* ── The heading dropdown, put right (0264) ──
+   Two faults from the screenshot: the doc's own typography (1.7em sizes,
+   generous margins) leaked into the popup's preview list — it shares the
+   .toastui-editor-contents class — stacking the levels over each other;
+   and a themed surface with any alpha let the doc bleed through. The
+   picker gets its own scale back, an opaque paint (surface layered over
+   page), and a seat above the toolbar. */
+#kb-editor-host .toastui-editor-popup {
+  z-index: 45;
+  background: linear-gradient(var(--surface), var(--surface)), var(--page);
+}
+
+#kb-editor-host .toastui-editor-popup-add-heading h1,
+#kb-editor-host .toastui-editor-popup-add-heading h2,
+#kb-editor-host .toastui-editor-popup-add-heading h3,
+#kb-editor-host .toastui-editor-popup-add-heading h4,
+#kb-editor-host .toastui-editor-popup-add-heading h5,
+#kb-editor-host .toastui-editor-popup-add-heading h6,
+#kb-editor-host .toastui-editor-popup-add-heading p {
+  margin: 0;
+  padding: 0;
+  border: none;
+  letter-spacing: normal;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+#kb-editor-host .toastui-editor-popup-add-heading h1 { font-size: 24px; }
+#kb-editor-host .toastui-editor-popup-add-heading h2 { font-size: 22px; }
+#kb-editor-host .toastui-editor-popup-add-heading h3 { font-size: 20px; }
+#kb-editor-host .toastui-editor-popup-add-heading h4 { font-size: 18px; }
+#kb-editor-host .toastui-editor-popup-add-heading h5 { font-size: 16px; }
+#kb-editor-host .toastui-editor-popup-add-heading h6 { font-size: 14px; }
+#kb-editor-host .toastui-editor-popup-add-heading p { font-size: 13px; }
+
+/* The hover wash in the app's palette, not Toast's baby blue. */
+#kb-editor-host .toastui-editor-popup-add-heading ul li:hover {
+  background-color: var(--well);
+}
+
+/* The pin sits in the tile's corner: quiet until hovered, lit when on. */
+.kb-doc-star {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  opacity: 0;
+  color: var(--text-faint);
+}
+
+.kb-key-doc:hover .kb-doc-star {
+  opacity: 1;
+}
+
+.kb-doc-star.starred {
+  opacity: 1;
+  color: var(--text);
+}
+
+/* ── Three columns (0279) ──
+   Sidebar, document, CLI — roughly 20/50/30. The sidebar folds to nothing
+   on the app's shared curves; the reveal lives in whichever header is up. */
+#kb-side {
+  /* A steady width (0287): the percentage read as off at real window
+     sizes; 240px is the sidebar the tree actually needs. */
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-right: 10px;
+  border-radius: var(--r-xl);
+  background: var(--well);
+  overflow: hidden;
+  transition:
+    width var(--motion-enter) var(--ease-enter),
+    min-width var(--motion-enter) var(--ease-enter),
+    margin var(--motion-enter) var(--ease-enter),
+    opacity var(--motion-exit) var(--ease-exit);
+}
+
+#kb-side-label {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+/* The default screen (0279): at most four cards, vertical, reading column. */
+#kb-home-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 640px;
+}
+
+.kb-home-doc {
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+}
+
+.kb-home-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+/* The CLI starts at 40% beside the doc; since 0396 the shared drag handle
+   works here too, so the terminal can be pulled wider when long lines need
+   the room. The dragged width is remembered per room. */
+#docs-view #board-term-pane {
+  width: 40%;
+  min-width: 320px;
+}
+
+/* ── Focus mode (0280) ──
+   The doc alone: the sidebar folds on its own transition, the terminal
+   slides away through hideGlobalTerminal, and the reveal buttons wait
+   until focus lifts. */
+#docs-view.focus-mode #kb-side {
+  width: 0;
+  min-width: 0;
+  margin-right: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Focus folds the terminal the same way the sidebar folds (0395): width
+   eases to nothing in the same breath, no slide-off, no layout jump. The
+   session stays alive underneath; lifting focus gives the width back and
+   the resize observer refits the columns. */
+#kb-doc-row #board-term-pane {
+  transition:
+    width var(--motion-enter) var(--ease-enter),
+    min-width var(--motion-enter) var(--ease-enter),
+    opacity var(--motion-exit) ease;
+  overflow: hidden;
+}
+
+#docs-view.focus-mode #kb-doc-row #board-term-pane {
+  width: 0 !important;
+  min-width: 0;
+  opacity: 0;
+  border-left: 0;
+  pointer-events: none;
+}
+
+#docs-view.focus-mode #kb-doc-row .resize-handle {
+  display: none;
+}
+
+/* On means on: the focus button keeps the accent while the room is bare. */
+#kb-focus.open {
+  color: var(--accent);
+  opacity: 1;
+}
+
+
+/* ── The grouped unit (0286) ──
+   The header crowns the doc and the CLI, the way a task card pairs them:
+   one border wraps the group, the row beneath the header splits into the
+   doc and the terminal, and the terminal is part of the anatomy — no Hide
+   in this room, focus mode is the only way it steps away. */
+#kb-group {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  background: var(--page);
+}
+
+#kb-doc-row {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+}
+
+/* The index has no doc header to wear. */
+#docs-view.index-mode #kb-doc-header {
+  display: none;
+}
+
+/* On the index the group sheds its chrome (0293): the right of the room is
+   just the background with one invitation floating in it. */
+#docs-view.index-mode #kb-group {
+  border: none;
+  background: transparent;
+}
+
+#docs-view.index-mode #kb-home-list {
+  flex: 1;
+  max-width: none;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The one invitation: a quiet bordered pill, the app's surface language. */
+.kb-index-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.kb-index-new:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+/* Docked inside the group, the pane is a column, not a floating card. */
+#kb-doc-row #board-term-pane {
+  width: 40%;
+  min-width: 320px;
+  margin: 0;
+  border: none;
+  border-left: 1px solid var(--border-strong);
+  border-radius: 0;
+}
+
+/* No Hide in this room (0286): the terminal is part of the anatomy. */
+#board-term-pane.docs-room #board-term-close {
+  display: none;
+}
+
+/* No header at all in this room (0291): "project · docs · cli" repeated
+   what the chrome already says, so the terminal starts flush at the top. */
+#board-term-pane.docs-room #board-term-header {
+  display: none;
+}
+
+/* The plus in the foot (0290): the sidebar's header is gone, and the one
+   make-things control sits quietly at the bottom, its menu popping upward. */
+#kb-side-foot {
+  display: flex;
+  padding: 4px 8px 8px;
+}
+
+/* The foot's tooltips open upward and hang from the left (0384): at the
+   window's bottom-left corner the default below-right bubble left the
+   screen entirely, which read as "the tooltip is gone" — and with it the
+   only signpost to folder/research/bookmark behind the right-click. */
+#kb-side-foot [data-tip]::before {
+  top: auto;
+  bottom: calc(100% + 1px);
+  right: auto;
+  left: 10px;
+  border-bottom-color: transparent;
+  border-top-color: var(--tip-bg);
+}
+
+#kb-side-foot [data-tip]::after {
+  top: auto;
+  bottom: calc(100% + 11px);
+  right: auto;
+  left: 0;
+}
+

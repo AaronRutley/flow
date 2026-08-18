@@ -1,0 +1,7 @@
+{
+  "comment": "Cold-start budget (0326). The renderer prints '[startup] ...' in dev and appends every run to <flow-root>/logs/startup.log. Milestones are ms from renderer script start. CI or a smoke step can compare a recorded run against these ceilings.",
+  "budget_ms": {
+    "board-data-ready": 1500,
+    "first-paint": 2000
+  }
+}

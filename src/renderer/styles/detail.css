@@ -1,0 +1,603 @@
+/* ── Card front matter ──
+   Two columns of label-over-value, so a branch name and a pull request url can
+   sit side by side without either being truncated to nothing. */
+.frontmatter {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.server-state {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+#route-input,
+#dev-command {
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 12px;
+  min-width: 0;
+}
+
+#route-input {
+  width: 110px;
+}
+
+#dev-command {
+  flex: 1;
+  min-width: 200px;
+}
+
+#route-input:focus,
+#dev-command:focus {
+  outline: none;
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+/* ── Plan prompt ── */
+.plan-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+  padding: 16px 18px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-lg);
+}
+
+.plan-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.plan-copy strong {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.plan-copy span {
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+
+.plan-prompt .text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  flex-shrink: 0;
+}
+
+.plan-error {
+  width: 100%;
+  font-size: 12px;
+  color: var(--amber-text);
+}
+
+/* ── Doc footer ── */
+#doc-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+}
+
+#doc-footer:has(#update-agent.hidden) {
+  display: none;
+}
+
+/* The follow-up input lives in the section it feeds, and wears the same
+   clothes as the context editor above it (0439): the well ground, the
+   hairline inset ring, the same rest and focus states — two fields in one
+   family, not two designs. */
+#todo-add,
+#modal-todo-add {
+  display: block;
+  width: 100%;
+  min-height: 46px;
+  max-height: 112px;
+  resize: none;
+  overflow-y: auto;
+  margin: 10px 0 4px;
+  padding: 11px 12px;
+  line-height: 22px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: var(--well);
+  box-shadow: inset 0 0 0 1px var(--border);
+  color: var(--text);
+  font: inherit;
+  font-size: 14.5px;
+}
+
+#todo-add::placeholder,
+#modal-todo-add::placeholder {
+  color: var(--text-faint);
+}
+
+#todo-add:focus,
+#modal-todo-add:focus {
+  outline: none;
+  /* The ground holds still on focus (0448); the ring alone says active. */
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+#sync-agent {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+}
+
+.server-log {
+  margin-top: 12px;
+  padding: 12px;
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.text-button[disabled] {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* ── Markdown ── */
+.markdown-body {
+  max-width: 760px;
+  line-height: 1.7;
+  outline: none;
+  font-size: 15.5px;
+}
+
+/* A shape being written, live. The model owns the document until it lands, so
+   the view takes no clicks, and a caret marks the writing edge. */
+.markdown-body.shape-streaming {
+  pointer-events: none;
+  user-select: text;
+}
+
+.markdown-body.shape-streaming > :last-child::after {
+  content: '▍';
+  margin-left: 2px;
+  color: var(--text-faint);
+  animation: shape-caret 1s steps(2) infinite;
+}
+
+.shape-stream-waiting {
+  color: var(--text-faint);
+}
+
+.shape-stream-hint {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+.shape-stream-hint code {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.shape-error {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--amber-bg);
+  border: 1px solid var(--amber-border);
+  color: var(--amber-text);
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.shape-error p {
+  margin: 0 0 10px;
+}
+
+.shape-error .text-button,
+.shape-streaming #shape-claude-login {
+  margin-top: 10px;
+}
+
+@keyframes shape-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Your half of the document, and the agent's. The context is a field you write
+   in; the plan below it is a report you tick, not text you retype. */
+.doc-context {
+  outline: none;
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  background: var(--well);
+  box-shadow: inset 0 0 0 1px var(--border);
+  min-height: 44px;
+  /* Typed newlines are the formatting in a plaintext field; without pre-wrap
+     they would render as spaces and look lost before they ever saved. */
+  white-space: pre-wrap;
+}
+
+.doc-context:focus {
+  /* The ground holds still on focus (0448); the ring alone says active. */
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.doc-plan {
+  margin-top: 4px;
+}
+
+/* The checklist's own heading (0451): set like the document's section
+   headings, with real air from the editor above. */
+.doc-checklist-heading {
+  margin: 26px 0 2px;
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--text);
+}
+
+/* Answer controls rendered from [input:] and [options:] directives: quiet
+   fields in the document's own type, never louder than the text around them. */
+.card-input,
+.card-select {
+  display: inline-block;
+  min-width: 180px;
+  max-width: 100%;
+  margin: 2px 0;
+  padding: 6px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+
+.card-input:focus,
+.card-select:focus {
+  outline: none;
+  border-color: var(--text-faint);
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  margin: 1.7em 0 0.5em;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.markdown-body h1:first-child,
+.markdown-body h2:first-child {
+  margin-top: 0;
+}
+
+.markdown-body h1 {
+  font-size: 21px;
+}
+
+/* Plan, Build, QA and Done when are section headings, not labels: set like an
+   h4 in sentence case rather than shouted in small caps. */
+.markdown-body h2 {
+  font-size: 15.5px;
+  font-weight: 650;
+  color: var(--text);
+}
+
+.markdown-body h3,
+.markdown-body h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.markdown-body p,
+.markdown-body ul,
+.markdown-body ol {
+  margin-bottom: 0.9em;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 1.3em;
+}
+
+.markdown-body li {
+  margin-bottom: 0.35em;
+}
+
+.markdown-body code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--well);
+}
+
+.markdown-body pre {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--well);
+  overflow-x: auto;
+  margin-bottom: 0.9em;
+}
+
+.markdown-body pre code {
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+.markdown-body a {
+  color: var(--accent);
+}
+
+.markdown-body img {
+  max-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  margin: 4px 0;
+  display: block;
+}
+
+.markdown-body blockquote {
+  padding-left: 14px;
+  border-left: 2px solid var(--border-strong);
+  color: var(--text-dim);
+  margin-bottom: 0.9em;
+}
+
+/* ── Checklists ──
+   A task list is checkboxes, not bullets with a box beside them. The box is
+   drawn rather than left to the platform, so it reads the same in both themes
+   and can be clicked without the caret landing in the middle of it. */
+.markdown-body ul:has(> li > input[type='checkbox']) {
+  padding-left: 0;
+  list-style: none;
+}
+
+.markdown-body li:has(> input[type='checkbox']) {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 0.5em;
+  list-style: none;
+}
+
+/* The real input is bookkeeping; the icon is the visible state. */
+.markdown-body .check-input {
+  display: none !important;
+}
+
+.check-mark {
+  display: flex;
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+
+.check-mark:hover {
+  color: var(--accent);
+}
+
+.markdown-body li:has(> input[type='checkbox']:checked) .check-mark {
+  color: var(--accent);
+}
+
+.check-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.markdown-body li:has(> input[type='checkbox'])::marker {
+  content: '';
+}
+
+/* A finished line should read as finished. */
+.markdown-body li:has(> input[type='checkbox']:checked) {
+  color: var(--text-faint);
+}
+
+/* The agent's one-line reply under an item, written as an indented list line in
+   the file, reads as a quiet threaded note rather than another task. */
+.markdown-body li:has(> input[type='checkbox']) {
+  flex-wrap: wrap;
+}
+
+.markdown-body li:has(> input[type='checkbox']) > ul {
+  flex-basis: 100%;
+  margin: 4px 0 2px 27px;
+  padding-left: 10px;
+  border-left: 2px solid var(--border);
+  list-style: none;
+}
+
+.markdown-body li:has(> input[type='checkbox']) > ul > li {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 2px;
+}
+
+.empty-state {
+  color: var(--text-faint);
+  padding: 40px 0;
+}
+
+/* ── Document sections ──
+   Light accordions in a fixed reading order: context, plan, codebase, QA,
+   review, follow ups. The header carries the state so a collapsed section
+   still says where it stands. */
+.acc {
+  border-top: 1px solid var(--border);
+}
+
+.acc:first-child {
+  border-top: none;
+}
+
+.acc-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.acc-caret {
+  display: flex;
+  color: var(--text-faint);
+  transition: transform 0.15s ease;
+}
+
+.acc.collapsed .acc-caret {
+  transform: rotate(-90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acc-caret {
+    transition: none;
+  }
+}
+
+.acc-title {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.acc-meta {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+.acc-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.acc-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.acc-button:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.acc-running {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+.acc-body {
+  padding: 2px 0 18px;
+}
+
+.acc.collapsed .acc-body {
+  display: none;
+}
+
+/* Inside the Plan group, the original headings step down to sub-headings. */
+.acc-body h2 {
+  font-size: 13.5px;
+  margin: 1.2em 0 0.4em;
+}
+
+.acc-body h2:first-child {
+  margin-top: 0.2em;
+}
+
+.acc-empty {
+  color: var(--text-faint);
+  font-size: 13px;
+  margin: 0;
+}
+
+/* ── QA queue ──
+   The working list between you and the agent. Flat since 0378: the section
+   header already frames it, and the boxed well around a bordered input read
+   as a double border. The class stays — wireQaEdits hangs off it. */
+.qa-queue {
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.qa-queue h2 {
+  margin: 0 0 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-faint);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.qa-queue ul {
+  margin-bottom: 4px;
+}
+
+.qa-text {
+  outline: none;
+  border-radius: 5px;
+  padding: 1px 4px;
+  margin-left: -4px;
+}
+
+.qa-text:hover {
+  background: var(--surface);
+}
+
+.qa-text:focus {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}

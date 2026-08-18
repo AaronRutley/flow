@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Transparent canvas — macOS applies its own mask -->
+  <rect width="1024" height="1024" fill="transparent"/>
+  <!-- Icon artwork inset to ~824x824 centered (100px margin each side) -->
+  <rect x="100" y="100" width="824" height="824" rx="180" fill="#0c0c0c"/>
+  <rect x="120" y="120" width="784" height="784" rx="165" fill="#111111" stroke="#1e1e1e" stroke-width="2"/>
+  <text x="512" y="530" text-anchor="middle" dominant-baseline="central"
+        font-family="SF Mono, Menlo, monospace" font-weight="700" font-size="340" fill="#5080b0"
+        letter-spacing="-16">aa</text>
+  <rect x="230" y="680" width="564" height="3" fill="#1e1e1e"/>
+</svg>

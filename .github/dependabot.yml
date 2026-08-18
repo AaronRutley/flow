@@ -1,0 +1,29 @@
+# Dependency autopilot (0361). Electron and node-pty are the load-bearing,
+# break-prone pair: they arrive grouped, labelled, and deliberately — never
+# folded into the weekly batch. Security advisories open PRs immediately.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      electron-native:
+        patterns:
+          - electron
+          - electron-builder
+          - node-pty
+      routine:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - electron
+          - electron-builder
+          - node-pty
+    labels:
+      - dependencies
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

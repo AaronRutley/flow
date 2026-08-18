@@ -1,0 +1,20 @@
+node_modules/
+dist/
+out/
+.DS_Store
+.env*
+
+# Old pre-publish git history, kept as a local safety net
+.git-backup/
+.git-prototype-archive/
+
+# Local-only: regenerable icon renders, QA screenshots, session logs, one-off scripts
+local/
+
+# Board content and config stay on this machine
+projects/
+
+# /lg session logs: local work notes, not part of the public repo
+docs/lg-goal.md
+docs/lg-progress.md
+docs/lg-log.html

@@ -1,0 +1,208 @@
+/* ── Layout ── */
+#app {
+  height: calc(
+    100vh - var(--titlebar-height) - var(--project-bar-height) - var(--toolbar-height)
+  );
+  overflow: hidden;
+}
+
+/* With the bars away on the dashboard (0469), the app area takes their
+   room: only the titlebar stands above it. */
+body.dashboard-up #app {
+  height: calc(100vh - var(--titlebar-height));
+}
+
+.view {
+  height: 100%;
+}
+
+/* ── Board ── */
+#board-view {
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  /* The design bar anchors to the view (0382). */
+  position: relative;
+}
+
+/* ── The design bar (0382) ──
+   FigJam manners: the make-things actions float bottom centre on their own
+   quiet shelf — a hairline, the surface, a soft lift — clear of the
+   columns' anatomy and ready to take user-defined actions later. */
+#design-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-raised);
+}
+
+/* At the window's foot the bubbles must open upward or they leave the
+   screen: the tip and its triangle both flip above the button. */
+#design-bar [data-tip]::before {
+  top: auto;
+  bottom: calc(100% + 1px);
+  border-bottom-color: transparent;
+  border-top-color: var(--tip-bg);
+}
+
+#design-bar [data-tip]::after {
+  top: auto;
+  bottom: calc(100% + 11px);
+}
+
+/* The global terminal: the same pane a card session gets, docked beside the
+   columns instead of beside a document. A hairline edge like every other
+   surface in the app; the right side runs flush to the window. */
+#board-term-pane {
+  width: 50%;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* The pane tracks the columns exactly (0367): same top and bottom lines
+     as the wells beside it, flush to the window on the right. */
+  margin: 4px 0 28px;
+  /* A thin pixel border since 0379 (superseding 0159's borderless dock):
+     with the gutter gone, the hairline is the separation. Flush right, so
+     no right edge to draw. */
+  border: 1px solid var(--border-strong);
+  border-right: 0;
+  /* Squared off (0367): the dock is a panel of the window, not a floating
+     card, so it keeps hard corners like the columns' own edge. */
+  border-radius: 0;
+  background: #f4f4f4;
+}
+
+:root[data-theme='dark'] #board-term-pane {
+  background: #141414;
+}
+
+#board-term-pane:not(.hidden) {
+  animation: pane-in-right var(--motion-enter) var(--ease-enter);
+}
+
+/* Dismissal is the arrival played backwards: the pane slides off to the
+   right and only then leaves the layout. */
+#board-term-pane.leaving {
+  animation: pane-out-right var(--motion-exit) var(--ease-exit) forwards;
+  pointer-events: none;
+}
+
+#board-view .resize-handle {
+  margin: 4px 0 28px;
+}
+
+/* No gutter beside the dock (0379): the handle rides on top of the pane's
+   left edge instead of holding a black strip open next to it. */
+#board-view:not(.term-bottom) .resize-handle[data-resize='board'] {
+  margin-right: -12px;
+  position: relative;
+  z-index: 5;
+}
+
+/* ── The pinned terminal (0172) ──
+   A third shape: the pane leaves the flow and stands fixed against the
+   right edge, window-top to window-bottom, corners squared. The title,
+   project and tool bars step left by the pane's width (the --term-pin var,
+   kept in px by the renderer) so Env, Terminal and Settings stay reachable;
+   the home views inset the same amount so nothing hides beneath it. All of
+   it gated on the pane actually being up. */
+body.term-pinned:has(#board-term-pane:not(.hidden)) #board-term-pane {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  height: auto !important;
+  width: var(--term-pin, 50%) !important;
+  margin: 0;
+  border-radius: 0;
+  border-left: 1px solid var(--border-strong);
+}
+
+body.term-pinned:has(#board-term-pane:not(.hidden)) #titlebar,
+body.term-pinned:has(#board-term-pane:not(.hidden)) #project-bar,
+body.term-pinned:has(#board-term-pane:not(.hidden)) #toolbar {
+  margin-right: var(--term-pin, 50%);
+}
+
+body.term-pinned:has(#board-term-pane:not(.hidden)) #board-view,
+body.term-pinned:has(#board-term-pane:not(.hidden)) #docs-view {
+  margin-right: var(--term-pin, 50%);
+}
+
+/* Fixed width while pinned: the drag handle stands down. */
+body.term-pinned .resize-handle[data-resize='board'] {
+  display: none;
+}
+
+/* In the docs view the pane sits inside the view's own padding, so its
+   board margins would stack on top and leave it 4px low and 28px short of
+   the panels beside it (0169). Zero them: the view's padding is the frame. */
+#docs-view #board-term-pane,
+#docs-view .resize-handle {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* With the pane up the columns run flush to its hairline (0379): the border
+   is the separation, no strip of page held open beside it. */
+#board-view:has(#board-term-pane:not(.hidden)) #columns {
+  padding-right: 0;
+}
+
+/* With the side pane up, each column holds the width it has when the pane
+   is closed — a third of the window less the board's own chrome (28px left
+   pad, 8px right pad, two 20px gaps, 12px handle) — and the row scrolls
+   sideways instead of squishing (0160). Pure CSS, so a resize or a pane
+   opened mid-layout can never lock in a squashed measurement. The bottom
+   dock keeps fluid columns: the pane is beneath them, not beside. */
+#board-view:not(.term-bottom):has(#board-term-pane:not(.hidden)) #columns {
+  grid-template-columns: repeat(3, max(290px, calc((100vw - 88px) / 3)));
+}
+
+#board-term-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11.5px;
+  color: var(--text-faint);
+  font-family: var(--mono);
+}
+
+/* The info icon leads (0271); the label hugs it and hands the rest of the
+   row to the tools on the right. */
+#board-term-label {
+  margin-right: auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#board-term-stack {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Armed close: the next click ends the session for real. */
+#board-term-close.confirm {
+  color: var(--amber-text);
+  background: var(--amber-bg);
+}
+
+
+/* Insights (0385): no view of its own any more — the docs view serves both
+   tabs, so the reserved-section styles left with the shell. */

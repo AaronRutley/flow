@@ -1,0 +1,280 @@
+/* ── Cards ── */
+.card {
+  position: relative;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  cursor: grab;
+}
+
+.card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-raised);
+}
+
+/* The keyboard's cursor on the board: a quiet accent ring, visible on both the
+   light wells and the dark ones without turning the card into a button. */
+.card.kb-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), var(--shadow-raised);
+}
+
+/* Sortable's three drag states: the gap left behind, the source card, and the
+   element following the cursor. */
+.card-ghost {
+  opacity: 1;
+  background: transparent;
+  border: 1px dashed var(--border-strong);
+  box-shadow: none;
+}
+
+.card-ghost > * {
+  visibility: hidden;
+}
+
+.card-chosen {
+  cursor: grabbing;
+}
+
+.card-dragging {
+  transform: rotate(1.2deg);
+  box-shadow: 0 14px 32px rgba(20, 20, 18, 0.18);
+  border-color: var(--border-strong);
+  cursor: grabbing;
+}
+
+/* The stand-in title of a not-yet-shaped, untitled card (0465): dimmed,
+   so the board says "unnamed" without shouting it. */
+.card-title.untitled {
+  color: var(--text-dim);
+}
+
+.card-title {
+  font-size: 15px;
+  line-height: 1.45;
+  letter-spacing: -0.005em;
+  /* A pasted URL or one long token wraps inside the card instead of running
+     out past its border. */
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.card-title strong,
+.card-lead {
+  font-weight: 650;
+}
+
+.card-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-sunken);
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.flag.amber {
+  background: var(--amber-bg);
+  border-color: var(--amber-border);
+  color: var(--amber-text);
+}
+
+.flag .icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* Attachments read as chips, not billboards (0198): a pasted screenshot
+   shows as a small bordered thumbnail; a click grows it, another shrinks
+   it. Knowledge docs are excluded — their figures are content. */
+.markdown-body:not(.kb-editor) img,
+.doc-context img {
+  max-height: 96px;
+  max-width: 220px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  cursor: zoom-in;
+  vertical-align: middle;
+}
+
+.markdown-body:not(.kb-editor) img.expanded,
+.doc-context img.expanded {
+  max-height: none;
+  max-width: 100%;
+  object-fit: contain;
+  cursor: zoom-out;
+}
+
+/* The working dots (0471, retiring 0195's orb): three grey dots breathing
+   to the title's left say a session is running without opening anything.
+   Bigger than the orb was and quieter — one muted colour, no glow. */
+.card-working {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 9px;
+  transform: translateY(-2px);
+  pointer-events: none;
+}
+
+.card-working i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  animation: dot-pulse 1.2s infinite ease-in-out;
+}
+
+.card-working i:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.card-working i:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-working i {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* ── The card's fixed footer ──
+   One reserved row under the title: the shaped tick lives there, the Shape
+   button appears there on hover, and shaping progress shows there. A constant
+   height, so nothing about the card moves when the state changes. */
+.card-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px;
+  margin-top: 8px;
+}
+
+.card-shaped {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-faint);
+  font-size: 11.5px;
+}
+
+.card-shape {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+
+.card:hover .card-shape {
+  display: inline-flex;
+}
+
+.card-shape:hover {
+  color: var(--accent);
+  border-color: var(--border-strong);
+}
+
+.card-foot .flag {
+  height: 22px;
+}
+
+.shape-elapsed {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* Three dots that think. */
+.dots {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 2px;
+}
+
+.dots i {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: dot-pulse 1.2s infinite ease-in-out;
+}
+
+.dots i:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dots i:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dot-pulse {
+  0%, 60%, 100% { opacity: 0.25; }
+  30% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dots i {
+    animation: none;
+  }
+}
+
+
+.column-empty {
+  padding: 24px 4px;
+  color: var(--text-faint);
+  font-size: 13px;
+}
+
+/* A card titled `--- Later ---` draws a line across the column instead. */
+.card-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 2px;
+  color: var(--text-faint);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: grab;
+}
+
+.card-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-strong);
+}
+
+.card-divider:empty::after,
+.card-divider:not(:has(span))::after {
+  flex: 1;
+}

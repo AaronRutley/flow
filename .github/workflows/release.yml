@@ -1,0 +1,37 @@
+# Release pipeline (0404): pushing a v* tag builds the installable app on a
+# clean macOS runner and publishes dmg, zip and checksums to a GitHub
+# release. The app's launch-time check (0342) then shows the Update pill to
+# every packaged install, whose click lands on that release page.
+#
+# Known gap, tracked on card 0340: no Developer ID signing yet, so builds
+# are unsigned (users right-click-Open once) and true in-app auto-download
+# (electron-updater) stays off — macOS refuses unsigned auto-updates by
+# design. When signing lands, this workflow gains the cert step and the
+# updater becomes worth wiring.
+name: release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: shasum -a 256 dist/*.dmg dist/*.zip > dist/SHASUMS256.txt
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            dist/*.dmg dist/*.zip dist/SHASUMS256.txt \
+            --title "Flow $GITHUB_REF_NAME" \
+            --generate-notes

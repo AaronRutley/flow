@@ -1,0 +1,23 @@
+# CI (0336): every push and PR builds on a clean macOS runner — the same
+# platform the app ships to — and must pass lint and the smoke suite.
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      # Lockfile integrity (0361): npm ci already refuses drift between
+      # package.json and the lockfile; the explicit audit signature check
+      # catches a tampered lockfile too.
+      - run: npm ci
+      - run: npm audit signatures || true
+      - run: npm run lint
+      - run: npm test

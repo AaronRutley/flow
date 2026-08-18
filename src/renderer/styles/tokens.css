@@ -1,0 +1,451 @@
+/* ── Tokens ──
+   The board is a light design first: white cards floating in soft grey wells.
+   Dark mode inverts the same relationships rather than restating them. */
+:root {
+  --page: #ffffff;
+  --well: #f2f2f0;
+  --surface: #ffffff;
+  --surface-sunken: #ececeb;
+  --border: #e6e6e3;
+  --border-strong: #d6d6d2;
+  --text: #1c1c1a;
+  --text-dim: #6b6b66;
+  --text-faint: #9a9a94;
+  --accent: #3a6fa0;
+  --amber-bg: #fdf3e3;
+  --amber-border: #f0dcb8;
+  --amber-text: #a26a1a;
+  --shadow-card: 0 1px 2px rgba(20, 20, 18, 0.05);
+  --shadow-raised: 0 1px 3px rgba(20, 20, 18, 0.07);
+  /* The terminal pane's layered edge: off-black in every theme. */
+  --term-edge: #1c1c1a;
+
+  --titlebar-height: 46px;
+  --project-bar-height: 54px;
+  --toolbar-height: 42px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+  --r-pill: 999px;
+  --mono: 'Geist Mono', 'SF Mono', 'JetBrains Mono', ui-monospace, monospace;
+
+  /* One motion language: things arrive on a decelerating curve and leave on an
+     accelerating one, entrances a hair slower than exits. Every pane and modal
+     animation reads from these, so the whole app moves as one piece. */
+  --motion-enter: 0.24s;
+  --motion-exit: 0.19s;
+  --ease-enter: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+}
+
+:root[data-theme='dark'] {
+  --page: #0e0e0d;
+  --well: #171716;
+  --surface: #1e1e1c;
+  --surface-sunken: #141413;
+  --border: #2b2b28;
+  --border-strong: #3c3c38;
+  --text: #e6e6e2;
+  --text-dim: #9a9a94;
+  --text-faint: #6b6b66;
+  --accent: #6f9dc9;
+  --amber-bg: #2b2214;
+  --amber-border: #4a3a1e;
+  --amber-text: #d8a55a;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-raised: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --term-edge: #000000;
+}
+
+/* Rainbow keeps the light design's relationships — white cards in soft wells,
+   dark text — and lets hue carry the mood instead of grey: plum text, lavender
+   wells, and one gradient strip across the top where the rainbow shows itself. */
+:root[data-theme='rainbow'] {
+  --page: #fffdf8;
+  --well: #f5f0fa;
+  --surface: #ffffff;
+  --surface-sunken: #f1eaf6;
+  --border: #e9def0;
+  --border-strong: #d5c3e3;
+  --text: #2d1f42;
+  --text-dim: #71618c;
+  --text-faint: #a294b8;
+  --accent: #b0388f;
+  --shadow-card: 0 1px 2px rgba(60, 30, 90, 0.06);
+  --shadow-raised: 0 1px 3px rgba(60, 30, 90, 0.08);
+  --term-edge: #2d1f42;
+}
+
+/* Each column wears its own hue. Scoping --well keeps every fade, foot
+   gradient and empty-state built on it in step with the tint. */
+:root[data-theme='rainbow'] .column[data-column='to-do'] {
+  --well: #e9f1fb;
+  --border: #d8e4f2;
+}
+
+:root[data-theme='rainbow'] .column[data-column='doing'] {
+  --well: #fdf1df;
+  --border: #f0e0c4;
+}
+
+:root[data-theme='rainbow'] .column[data-column='done'] {
+  --well: #e7f4e9;
+  --border: #d3e8d6;
+}
+
+/* Matrix: phosphor on glass. Near-black ground, every tone a green, a soft
+   glow on the type and scanlines over the whole pane. The functional reds
+   survive - an error you cannot see is worse than a broken aesthetic. */
+:root[data-theme='matrix'] {
+  --page: #030503;
+  --well: #071007;
+  --surface: #0a140a;
+  --surface-sunken: #050c05;
+  --border: #133213;
+  --border-strong: #1e4d1e;
+  --text: #46f97e;
+  --text-dim: #2fae57;
+  --text-faint: #1e7038;
+  --accent: #6cffa0;
+  --amber-bg: #14260a;
+  --amber-border: #2c4a12;
+  --amber-text: #a8d34a;
+  --shadow-card: 0 0 12px rgba(70, 249, 126, 0.05);
+  --shadow-raised: 0 0 16px rgba(70, 249, 126, 0.09);
+  --term-edge: #000000;
+}
+
+:root[data-theme='matrix'] body {
+  text-shadow: 0 0 6px rgba(70, 249, 126, 0.28);
+}
+
+/* The glass itself: faint scanlines over everything, catching the CRT without
+   getting in the way of reading. */
+:root[data-theme='matrix'] body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.14) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+:root[data-theme='matrix'] #term-pane,
+:root[data-theme='matrix'] #board-term-pane {
+  background: #030503;
+}
+
+:root[data-theme='matrix'] #settings-modal,
+:root[data-theme='matrix'] #card-add-modal,
+:root[data-theme='matrix'] #card-modal,
+:root[data-theme='matrix'] #search-overlay {
+  background: rgba(0, 8, 2, 0.72);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme='matrix'] body::after {
+    display: none;
+  }
+}
+
+:root[data-theme='rainbow'] #titlebar {
+  background: linear-gradient(
+    90deg,
+    #ffb3c1,
+    #ffd29a,
+    #fdf39b,
+    #a9ecb4,
+    #9ed4ff,
+    #d3b8ff,
+    #ffb3c1
+  );
+  background-size: 300% 100%;
+  animation: rainbow-pan 18s linear infinite;
+}
+
+/* ── More rainbow: the animated pass ──
+   Everything below is rainbow-mode only. Three slow keyframe pans do all the
+   moving — background positions, no layout work — and reduced motion turns
+   the lot off at the end. */
+
+/* The whole page drifts through pastel weather, slowly enough to feel like
+   light changing rather than something playing. */
+:root[data-theme='rainbow'] body {
+  background: linear-gradient(
+    120deg,
+    #fff6f3,
+    #fffaf0,
+    #f5faf1,
+    #eff7fb,
+    #f6f1fb,
+    #fff6f3
+  );
+  background-size: 400% 400%;
+  animation: rainbow-drift 45s ease-in-out infinite;
+}
+
+/* Every card wears a moving rainbow border: the surface paints the padding
+   box, the gradient paints the border box, and the radius survives because
+   this is backgrounds, not border-image. */
+:root[data-theme='rainbow'] .card {
+  border-color: transparent;
+  background:
+    linear-gradient(var(--surface), var(--surface)) padding-box,
+    linear-gradient(120deg, #ff7fa5, #ffb457, #f2e34e, #58d986, #4fb3ff, #b18cff, #ff7fa5)
+      border-box;
+  background-size: 100% 100%, 300% 300%;
+  animation: rainbow-border 14s linear infinite;
+}
+
+:root[data-theme='rainbow'] .card:hover {
+  border-color: transparent;
+  box-shadow: 0 2px 10px rgba(120, 70, 160, 0.14);
+}
+
+/* The project name is itself a rainbow, moving. It goes back to plain plum
+   while you are renaming, so the caret and selection stay visible. */
+:root[data-theme='rainbow'] #project-title:not(:focus) {
+  background-image: linear-gradient(
+    90deg,
+    #c74d7c,
+    #c0762e,
+    #94861f,
+    #3f9d58,
+    #3f7fb5,
+    #8b5fc0,
+    #c74d7c
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rainbow-pan 12s linear infinite;
+}
+
+/* The columns breathe: each well is a gradient of its own neighbouring hues,
+   drifting vertically on the slowest cycle of the lot. */
+:root[data-theme='rainbow'] .column[data-column='to-do'] {
+  background: linear-gradient(170deg, #e9f1fb, #ecf6fa, #eaeefc, #e9f1fb);
+  background-size: 100% 300%;
+  animation: rainbow-drift-y 34s ease-in-out infinite;
+}
+
+:root[data-theme='rainbow'] .column[data-column='doing'] {
+  background: linear-gradient(170deg, #fdf1df, #fdf5e3, #fceddd, #fdf1df);
+  background-size: 100% 300%;
+  animation: rainbow-drift-y 30s ease-in-out infinite;
+}
+
+:root[data-theme='rainbow'] .column[data-column='done'] {
+  background: linear-gradient(170deg, #e7f4e9, #ecf6ec, #e5f2ee, #e7f4e9);
+  background-size: 100% 300%;
+  animation: rainbow-drift-y 38s ease-in-out infinite;
+}
+
+/* The panes join the same weather: a warm-tinted terminal (the xterm palette
+   keeps its dark-on-light contrast) and a faintly lavender document. */
+:root[data-theme='rainbow'] #term-pane,
+:root[data-theme='rainbow'] #board-term-pane {
+  background: #faf4f1;
+}
+
+:root[data-theme='rainbow'] #doc-pane {
+  background: rgba(246, 241, 251, 0.55);
+}
+
+/* Column headers own their hue outright: icon and count chip in the column's
+   colour instead of neutral grey. */
+:root[data-theme='rainbow'] .column[data-column='to-do'] .column-icon,
+:root[data-theme='rainbow'] .column[data-column='to-do'] .count-chip {
+  background: #dcebfa;
+  color: #2f6f9f;
+}
+
+:root[data-theme='rainbow'] .column[data-column='doing'] .column-icon,
+:root[data-theme='rainbow'] .column[data-column='doing'] .count-chip {
+  background: #fae8cd;
+  color: #a26a1a;
+}
+
+:root[data-theme='rainbow'] .column[data-column='doing'] .column-icon::after {
+  background: #a26a1a;
+  color: #fae8cd;
+}
+
+:root[data-theme='rainbow'] .column[data-column='done'] .column-icon,
+:root[data-theme='rainbow'] .column[data-column='done'] .count-chip {
+  background: #d8eedb;
+  color: #3f7d4e;
+}
+
+/* Primary buttons trade ink for a moving gradient; the hues are kept deep
+   enough that the light text stays comfortably readable on every stop. */
+:root[data-theme='rainbow'] .text-button.primary {
+  border-color: transparent;
+  background: linear-gradient(110deg, #b3446c, #8b5fc0, #2f6f9f, #b3446c);
+  background-size: 300% 100%;
+  color: #ffffff;
+  animation: rainbow-pan 10s linear infinite;
+}
+
+/* The toast arrives wearing the border the cards wear. */
+:root[data-theme='rainbow'] #toast {
+  border-color: transparent;
+  background:
+    linear-gradient(var(--surface), var(--surface)) padding-box,
+    linear-gradient(120deg, #ff7fa5, #ffb457, #f2e34e, #58d986, #4fb3ff, #b18cff, #ff7fa5)
+      border-box;
+  background-size: 100% 100%, 300% 300%;
+  animation: rainbow-border 14s linear infinite;
+}
+
+@keyframes rainbow-pan {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 300% 50%;
+  }
+}
+
+@keyframes rainbow-drift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes rainbow-border {
+  0% {
+    background-position: 0 0, 0% 50%;
+  }
+  50% {
+    background-position: 0 0, 100% 50%;
+  }
+  100% {
+    background-position: 0 0, 0% 50%;
+  }
+}
+
+@keyframes rainbow-drift-y {
+  0% {
+    background-position: 50% 0%;
+  }
+  50% {
+    background-position: 50% 100%;
+  }
+  100% {
+    background-position: 50% 0%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme='rainbow'] #titlebar,
+  :root[data-theme='rainbow'] body,
+  :root[data-theme='rainbow'] .card,
+  :root[data-theme='rainbow'] .column,
+  :root[data-theme='rainbow'] #project-title:not(:focus),
+  :root[data-theme='rainbow'] .text-button.primary,
+  :root[data-theme='rainbow'] #toast {
+    animation: none;
+  }
+}
+
+/* ── High contrast (0353) ──
+   When the OS asks for more contrast, hairlines firm up and the dim text
+   tiers step toward full ink, in both ground schemes. Layout never moves. */
+@media (prefers-contrast: more) {
+  :root {
+    --border: #b0b0ab;
+    --border-strong: #8a8a84;
+    --text-dim: #3c3c38;
+    --text-faint: #5a5a54;
+  }
+
+  :root[data-theme='dark'] {
+    --border: #55554f;
+    --border-strong: #7a7a72;
+    --text-dim: #c9c9c2;
+    --text-faint: #a8a8a0;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* The theme crossfade (0405): only while .theme-fading is on the root —
+   set by the toggle for ~320ms — every surface blends its colours instead
+   of snapping. Scoped to the moment so the app pays no transition tax in
+   normal use, and terminals (which paint their own canvas) opt out. */
+.theme-fading *,
+.theme-fading *::before,
+.theme-fading *::after {
+  transition:
+    background-color 0.28s ease,
+    color 0.28s ease,
+    border-color 0.28s ease,
+    fill 0.28s ease,
+    stroke 0.28s ease !important;
+}
+
+.theme-fading .term-instance,
+.theme-fading .term-instance * {
+  transition: none !important;
+}
+
+/* Selected text is a stated choice, not the browser's guess (0387, black
+   since 0424): black ground with white ink in every theme — quieter than
+   the accent blue it replaced. The terminal keeps its own selection
+   painting; this covers the DOM. */
+::selection {
+  background: #000000;
+  color: #ffffff;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  font-size: 13.5px;
+  background: var(--page);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Keyboard focus is visible on fields; buttons and tabs stay quiet (0278).
+   Chromium promotes a clicked button to focus-visible on the next
+   keypress, which lit random chrome with the accent ring — the "odd UI"
+   under the logo. Buttons carry hover and active dressing of their own,
+   and fields keep their focus borders. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+.tab:focus-visible,
+[contenteditable]:focus-visible {
+  outline: none;
+}
+
+.icon {
+  display: block;
+  flex-shrink: 0;
+}

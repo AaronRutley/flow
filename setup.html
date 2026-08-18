@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Flow</title>
+  <!-- Same policy stance as index.html (0320); this window is one button. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; img-src 'self' file: data:; style-src 'unsafe-inline'; connect-src 'none'">
+  <style>
+    /* One screen, one job: pick the folder Flow keeps its files in. Dark and
+       quiet so the logo carries it, matching the board window's #0c0c0c. */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --page: #0c0c0c;
+      --surface: #161616;
+      --border: #2b2b2b;
+      --border-strong: #3c3c3c;
+      --text: #e6e6e2;
+      --text-dim: #9a9a94;
+      --mono: 'Geist Mono', 'SF Mono', 'JetBrains Mono', ui-monospace, monospace;
+    }
+
+    body {
+      background: var(--page);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    /* The window has no titlebar; this strip keeps it draggable. */
+    .drag {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 46px;
+      -webkit-app-region: drag;
+    }
+
+    .splash {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 0 48px;
+    }
+
+    /* Big enough to be the artwork rather than a favicon of itself: this is
+       the one screen with nothing else on it, so the logo carries it. */
+    .logo {
+      width: 216px;
+      height: 216px;
+      opacity: 0;
+      transform: scale(0.94);
+      animation: enter 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+    }
+
+    h1 {
+      margin-top: 20px;
+      font-family: var(--mono);
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      opacity: 0;
+      animation: enter 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) 0.08s forwards;
+    }
+
+    .tagline {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--text-dim);
+      opacity: 0;
+      animation: enter 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) 0.14s forwards;
+    }
+
+    .action {
+      margin-top: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      opacity: 0;
+      animation: enter 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) 0.22s forwards;
+    }
+
+    button {
+      font: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      padding: 10px 22px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #555;
+      background: #1d1d1d;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .hint {
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text-dim);
+      max-width: 320px;
+    }
+
+    .hint code {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text);
+    }
+
+    @keyframes enter {
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="drag"></div>
+
+  <div class="splash">
+    <img class="logo" src="build/icon_1024.png" alt="Flow">
+    <h1>Flow</h1>
+    <p class="tagline">Streamline your vibe coding projects with a kanban,<br>knowledgebase and CLI coding agent in one app.</p>
+
+    <div class="action">
+      <button id="choose">Choose a folder…</button>
+      <p class="hint" id="hint">
+        This is where Flow saves the markdown files.
+      </p>
+    </div>
+  </div>
+
+  <script src="setup.js"></script>
+</body>
+</html>
