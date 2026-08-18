@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://www.flow-app.dev/flow-icon.png" alt="Flow logo" width="128">
+</p>
+
 # Flow
 
 A tool for product builders and vibe coders, to stay in the flow.
@@ -11,6 +15,8 @@ Notion and Google Docs. To-dos in Trello and stray markdown files. Three
 terminal tabs of Claude sessions and prompts typed into the wrong one.
 Reports stuck on your desktop. Flow puts the whole loop in one minimal app:
 ideas, tasks, agents and results, side by side.
+
+![A Flow card with its dev plan open beside a live Claude Code session](https://www.flow-app.dev/screens/screen-2.jpg)
 
 - **A board that works.** Every card is a task an agent can pick up. Drag
   it into Doing and Flow handles the setup: a persistent Claude Code
@@ -26,6 +32,8 @@ ideas, tasks, agents and results, side by side.
   already have. No API keys, no accounts.
 - **Plain files, stored locally.** Everything is markdown and HTML on your
   disk, readable in a year, no cloud, no tracking.
+
+![Flow's Planning tab, with a pitch doc open beside a live Claude Code session](https://www.flow-app.dev/screens/screen-1.jpg)
 
 Free and open source, MIT licensed.
 
@@ -49,6 +57,8 @@ Flow runs from source for now; packaged downloads come later.
 3. First launch asks where to keep your files. Pick a folder; everything
    Flow writes lives there as plain markdown and JSON.
 4. Add your repo as a project, write your first card, drag it into Doing.
+
+![A fresh Flow board, with To do, Doing and Done columns waiting for cards](https://www.flow-app.dev/screens/screen-0.jpg)
 
 `npm test` runs the smoke suite. Architecture notes live in
 [`docs/architecture.md`](docs/architecture.md) and contribution guidelines
