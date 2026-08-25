@@ -83,7 +83,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "electron": "^43.4.0",
+    "electron": "^43.4.1",
     "electron-builder": "^26.8.1",
     "eslint": "^10.8.1",
     "prettier": "^3.9.6",
